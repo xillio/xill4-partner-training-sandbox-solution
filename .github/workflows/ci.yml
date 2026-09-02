@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Test
+        # Includes, for every scenario in the repo: its reference solution scores 100, and
+        # an untouched workspace scores 0. A scenario that fails either is not shippable.
+        run: pytest
+
+  end-to-end:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install PyYAML
+      - name: Provision, solve and grade a workspace the way the control plane does
+        run: ./workspace/provision.sh ci-trainee 01-legacy-fileshare
+      - run: make solve WORKSPACE=.workspaces/ci-trainee/01-legacy-fileshare
+      - run: make grade WORKSPACE=.workspaces/ci-trainee/01-legacy-fileshare
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: grading-report
+          path: .workspaces/ci-trainee/01-legacy-fileshare/report.json

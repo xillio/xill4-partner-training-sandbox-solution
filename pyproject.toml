@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xill4-training-sandbox"
+version = "0.1.0"
+description = "Scenario grading engine for the Xill4 partner training sandbox"
+requires-python = ">=3.11"
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+# Only scenarios whose target is object storage need these.
+s3 = ["boto3>=1.34"]
+dev = ["pytest>=7.4", "ruff>=0.5"]
+
+[project.scripts]
+grader = "grader.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["grader"]
+
+[tool.pytest.ini_options]
+pythonpath = ["grader", "grader/tests"]
+testpaths = ["grader/tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "PL", "RUF"]
+ignore = ["PLR2004"]  # magic values are fine in assertions and small comparisons
+
+[tool.ruff.lint.per-file-ignores]
+"grader/tests/*" = ["PLR0913", "S101"]
+"grader/grader/checks/__init__.py" = ["E402"]  # plugin imports must follow the registry

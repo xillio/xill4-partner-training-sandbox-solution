@@ -1,0 +1,88 @@
+id: 01-legacy-fileshare
+title: Migrate a legacy project file share
+level: 1
+prerequisites: []
+brief: brief.md
+timebox_minutes: 90
+
+# Filled in per trainee by the control plane when the workspace is provisioned.
+# SOURCE and TARGET are mounted into the trainee's Xill4 instance; EXPECTED is not.
+requires_vars: [SOURCE, TARGET, EXPECTED]
+
+tasks:
+  - id: extract
+    title: Inventory the share
+    weight: 15
+    hint: >-
+      Walk every folder under the share, not just the top level, and remember that
+      metadata.csv is not itself a document to migrate.
+    checks:
+      - id: manifest-exists
+        type: fs.exists
+        description: target/manifest.json has been produced
+        params: {path: "${TARGET}/manifest.json", kind: file}
+        on_fail: Write the inventory to target/manifest.json before running the rest.
+      - id: manifest-complete
+        type: json.assert
+        description: the manifest accounts for every file on the share
+        params:
+          path: "${TARGET}/manifest.json"
+          queries:
+            - query: "documents[]"
+              equals: {from: "${EXPECTED}/facts.json", query: "files_on_share"}
+        on_fail: >-
+          The count is off. Check that you recursed into every client folder and excluded
+          metadata.csv.
+
+  - id: transform
+    title: Normalise the metadata
+    weight: 25
+    hint: >-
+      Three date formats appear in the export, and the department column was never
+      controlled. Archived records do not belong in the target at all.
+    checks:
+      - id: metadata-correct
+        type: csv.matches
+        description: target/metadata.csv holds one normalised row per migrated document
+        params:
+          path: "${TARGET}/metadata.csv"
+          expected: "${EXPECTED}/metadata.csv"
+          key: doc_id
+          columns: [title, author, created, department]
+        on_fail: >-
+          Compare the reported rows against the rules in the brief -- dates must be
+          ISO-8601 and departments must be one of the four canonical values.
+
+  - id: load
+    title: Load the content into the target structure
+    weight: 40
+    hint: "The target layout is department/year/doc_id.ext, and content must be byte-identical."
+    checks:
+      - id: content-tree
+        type: fs.tree_matches
+        description: every migrated document landed at the right path with unchanged bytes
+        params:
+          path: "${TARGET}/content"
+          manifest: "${EXPECTED}/content_tree.json"
+          compare: content
+        on_fail: >-
+          Documents are missing, misplaced or altered. The year comes from the normalised
+          created date, not the source folder name.
+
+  - id: exceptions
+    title: Report what could not be migrated
+    weight: 20
+    hint: >-
+      Two kinds of defect exist in this share. A migration that silently drops records is
+      worse than one that reports them.
+    checks:
+      - id: exceptions-correct
+        type: csv.matches
+        description: target/exceptions.csv lists every defective record with its reason
+        params:
+          path: "${TARGET}/exceptions.csv"
+          expected: "${EXPECTED}/exceptions.csv"
+          key: file_path
+          columns: [reason]
+        on_fail: >-
+          Use the reason codes from the brief exactly: missing_file and no_metadata.
