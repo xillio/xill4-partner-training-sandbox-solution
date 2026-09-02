@@ -34,10 +34,19 @@ DEPARTMENT_VARIANTS = {
     "engineering": ["Engineering", "ENG", "engineering", "R&D / Engineering"],
     "marketing": ["Marketing", "MKT", " marketing", "Marketing & Comms"],
 }
+# One topic per document, never reused: the title is built from it, and the target path is
+# built from the title. Reusing a topic could put two documents on one target path, where
+# one would silently overwrite the other -- and since the answer key would collapse the
+# same way, the grader would award full marks for a lost document. Keep this list at least
+# DOCUMENT_COUNT long.
 TOPICS = ["quarterly report", "service agreement", "design specification", "audit findings",
           "migration plan", "risk register", "vendor assessment", "release notes",
           "budget forecast", "policy update", "training manual", "incident review",
-          "capacity study", "data retention policy", "roadmap review", "cost analysis"]
+          "capacity study", "data retention policy", "roadmap review", "cost analysis",
+          "statement of work", "access review", "disaster recovery plan", "change log",
+          "supplier contract", "board minutes", "security assessment", "licence inventory",
+          "handover notes", "service catalogue", "penetration test report", "asset register",
+          "retention schedule", "escalation procedure"]
 SURNAMES = ["Jansen", "de Vries", "Bakker", "Visser", "Smit", "Meijer", "Mulder", "Bos"]
 GIVEN_NAMES = ["Anna", "Pieter", "Sofie", "Lars", "Maud", "Tobias", "Ilse", "Ruben"]
 EXTENSIONS = ["pdf", "docx", "xlsx", "txt"]
@@ -64,6 +73,11 @@ def _write_date(rng: random.Random, year: int, month: int, day: int) -> str:
 
 
 def build_documents(rng: random.Random) -> list[dict]:
+    if len(TOPICS) < DOCUMENT_COUNT:
+        raise AssertionError(
+            f"need at least {DOCUMENT_COUNT} topics to keep every title unique, "
+            f"have {len(TOPICS)}"
+        )
     documents = []
     for index in range(DOCUMENT_COUNT):
         department = DEPARTMENTS[index % len(DEPARTMENTS)]

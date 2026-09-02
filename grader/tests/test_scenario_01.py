@@ -4,6 +4,9 @@ A check suite that passes a correct answer but also passes an empty workspace gr
 nothing. Both directions are asserted here, and in CI, for every scenario in the repo.
 """
 
+import hashlib
+import importlib.util
+import random
 import subprocess
 import sys
 from pathlib import Path
@@ -59,6 +62,25 @@ def test_seeding_is_reproducible(tmp_path) -> None:
         outputs.append((target / ".expected" / "content_tree.json").read_text())
 
     assert outputs[0] == outputs[1], "the same seed must always produce the same workspace"
+
+
+def test_no_seed_puts_two_documents_on_one_target_path() -> None:
+    """A collision would silently lose a document and still score 100/100.
+
+    The answer key is derived from the same seed as the source data, so if two documents
+    mapped to one target path both sides would collapse identically and the grader would
+    award full marks for a migration that dropped a file. Titles must stay unique.
+    """
+    spec = importlib.util.spec_from_file_location("seedgen", SCENARIO_01 / "seedgen.py")
+    seedgen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(seedgen)
+
+    for index in range(200):
+        digest = hashlib.sha256(f"trainee-{index}:01".encode()).hexdigest()
+        documents = seedgen.build_documents(random.Random(digest))
+        migrated = [d for d in documents if d["status"] == "active" and "defect" not in d]
+        paths = [f"{d['department']}/{d['year']}/{d['doc_id']}.{d['extension']}" for d in migrated]
+        assert len(paths) == len(set(paths)), f"seed trainee-{index}:01 collides"
 
 
 def test_partial_work_scores_partially(solved_workspace, scenario_vars) -> None:

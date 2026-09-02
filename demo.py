@@ -70,9 +70,10 @@ def main() -> int:
     step(1, "Seed one trainee's workspace",
          "each trainee gets their own generated copy of the legacy share")
     print(run(SCENARIO / "seedgen.py", "--workspace", str(SANDBOX), "--seed", "alice:01").strip())
-    files = sorted(p for p in (SANDBOX / "source").rglob("*") if p.is_file())
-    print(f"   source/ holds {len(files)} files, e.g. "
-          f"{files[1].relative_to(SANDBOX / 'source')}")
+    documents = sorted(p for p in (SANDBOX / "source").rglob("*")
+                       if p.is_file() and p.name != "metadata.csv")
+    print(f"   source/ holds {len(documents)} documents plus the client's metadata.csv")
+    print(f"   e.g. {documents[1].relative_to(SANDBOX / 'source')}")
     expect("answer key is generated outside source/ and target/",
            (SANDBOX / ".expected").is_dir(), True)
 
