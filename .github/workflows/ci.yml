@@ -30,7 +30,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install PyYAML
-      - name: Provision, solve and grade a workspace the way the control plane does
+      - name: Prove the loop the same way a reader does
+        # Asserts all five claims in the README, including that a broken workspace loses
+        # exactly the task it broke.
+        run: python demo.py
+      - name: Provision a workspace the way the control plane does
         run: ./workspace/provision.sh ci-trainee 01-legacy-fileshare
       - run: make solve WORKSPACE=.workspaces/ci-trainee/01-legacy-fileshare
       - run: make grade WORKSPACE=.workspaces/ci-trainee/01-legacy-fileshare

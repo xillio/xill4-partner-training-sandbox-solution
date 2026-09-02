@@ -25,13 +25,10 @@ solve:  ## run the reference solution against that workspace
 
 grade:  ## grade the workspace exactly as the "Check my work" button does
 	PYTHONPATH=grader python3 -m grader $(SCENARIO) \
-		--workspace $(WORKSPACE) \
-		--var SOURCE=$(abspath $(WORKSPACE))/source \
-		--var TARGET=$(abspath $(WORKSPACE))/target \
-		--var EXPECTED=$(abspath $(WORKSPACE))/.expected \
-		--json $(WORKSPACE)/report.json
+		--workspace $(WORKSPACE) --json $(WORKSPACE)/report.json
 
-demo: seed solve grade  ## seed, solve and grade in one go
+demo:  ## prove the whole loop in one command -- works without make too
+	python3 demo.py
 
 clean:
 	rm -rf .workspaces .pytest_cache **/__pycache__

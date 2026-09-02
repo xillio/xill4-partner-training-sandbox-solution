@@ -43,6 +43,11 @@ class Context:
             if key.startswith("SANDBOX_")
         }
         variables.setdefault("WORKSPACE", str(workspace))
+        # The conventional layout, so the common case needs no configuration at all.
+        # An unconventional workspace overrides any of these with SANDBOX_* or --var.
+        for name, directory in (("SOURCE", "source"), ("TARGET", "target"),
+                                ("EXPECTED", ".expected")):
+            variables.setdefault(name, str(workspace / directory))
         variables.update(extra or {})
         return cls(workspace=workspace, vars=variables)
 

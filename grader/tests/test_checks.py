@@ -31,6 +31,19 @@ def test_relative_paths_resolve_against_the_workspace(ctx, tmp_path):
     assert ctx.path("target/out.json") == tmp_path / "target" / "out.json"
 
 
+def test_from_env_assumes_the_conventional_workspace_layout(tmp_path):
+    """The common case needs no configuration: source/, target/ and .expected/ are implied."""
+    built = Context.from_env(tmp_path)
+    assert built.expand("${SOURCE}") == str(tmp_path / "source")
+    assert built.expand("${TARGET}") == str(tmp_path / "target")
+    assert built.expand("${EXPECTED}") == str(tmp_path / ".expected")
+
+
+def test_explicit_variables_override_the_conventional_layout(tmp_path):
+    built = Context.from_env(tmp_path, extra={"TARGET": "/mnt/somewhere-else"})
+    assert built.expand("${TARGET}") == "/mnt/somewhere-else"
+
+
 def test_fs_exists_reports_missing_paths(ctx):
     outcome = run_check("fs.exists", {"path": "${TARGET}/manifest.json", "kind": "file"}, ctx)
     assert not outcome.passed and "missing" in outcome.message
