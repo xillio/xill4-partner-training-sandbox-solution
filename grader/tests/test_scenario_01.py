@@ -6,6 +6,7 @@ nothing. Both directions are asserted here, and in CI, for every scenario in the
 
 import hashlib
 import importlib.util
+import json
 import random
 import subprocess
 import sys
@@ -81,6 +82,27 @@ def test_no_seed_puts_two_documents_on_one_target_path() -> None:
         migrated = [d for d in documents if d["status"] == "active" and "defect" not in d]
         paths = [f"{d['department']}/{d['year']}/{d['doc_id']}.{d['extension']}" for d in migrated]
         assert len(paths) == len(set(paths)), f"seed trainee-{index}:01 collides"
+
+
+def test_seeded_documents_are_written_byte_for_byte(seeded_workspace) -> None:
+    """Seed content must hit the disk unchanged, on every platform.
+
+    The answer key stores a sha256 of each document body and the grader compares content
+    byte for byte. Writing in text mode on Windows rewrote every \n as \r\n, so a correct
+    migration scored 60/100 with all 19 documents reported as having the wrong content.
+    """
+    documents = [p for p in (seeded_workspace / "source").rglob("*")
+                 if p.is_file() and p.name != "metadata.csv"]
+    assert documents
+
+    for document in documents:
+        assert b"\r\n" not in document.read_bytes(), f"{document.name} has translated newlines"
+
+    expected_hashes = set(json.loads(
+        (seeded_workspace / ".expected" / "content_tree.json").read_text(encoding="utf-8")
+    ).values())
+    on_disk = {hashlib.sha256(d.read_bytes()).hexdigest() for d in documents}
+    assert expected_hashes <= on_disk, "answer key hashes disagree with the bytes on disk"
 
 
 def test_partial_work_scores_partially(solved_workspace, scenario_vars) -> None:

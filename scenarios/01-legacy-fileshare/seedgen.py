@@ -123,7 +123,10 @@ def write_source(root: Path, documents: list[dict]) -> None:
             continue  # listed in the metadata, absent from the share
         target = root / document["source_path"]
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(document["body"], encoding="utf-8")
+        # write_bytes, not write_text: text mode rewrites \n as \r\n on Windows, while the
+        # answer key hashes the body as written here. The grader compares content by
+        # sha256, so a translated newline makes every single document mismatch.
+        target.write_bytes(document["body"].encode("utf-8"))
 
     with (root / "metadata.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)

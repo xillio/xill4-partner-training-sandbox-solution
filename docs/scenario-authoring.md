@@ -70,10 +70,17 @@ This is what lets one scenario grade N differently-seeded workspaces.
 for length. Anything more complex is a sign the assertion wants to be its own check type,
 where the failure message can explain itself properly.
 
+Two rules keep a scenario grading identically on Windows and Linux, both learned the hard
+way. Any path a scenario **stores or compares** -- in a manifest, a CSV, a check parameter --
+must use forward slashes; take them from `Path.as_posix()`, never `str(Path)`. And any file
+whose **content** is hashed must be written with `write_bytes`, because text mode rewrites
+`\n` as `\r\n` on Windows and every hash then mismatches.
+
 `cmd.run` is the escape hatch and the home of holdout grading: run a hidden input through
 whatever the trainee built and assert the output. It is the strongest signal available,
 because it shows the migration generalises rather than having been hand-fixed for the
-records the trainee could see.
+records the trainee could see. Pass its `command` as a **list**, not a string: string
+commands go through `shlex.split`, which follows POSIX quoting and mangles Windows paths.
 
 ### Adding a check type
 

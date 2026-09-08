@@ -19,6 +19,11 @@ Everything below runs on **your own laptop** — macOS, Windows or Linux — in 
 You do not need Docker, Xill4, an Azure subscription, `make`, or a Unix shell. Nothing here
 touches the network.
 
+The grader and `demo.py` are tested on Windows and Linux in CI. Two files in this repo are
+Unix-only and not needed to try anything: `workspace/provision.sh` (bash) and the `Makefile`
+(needs `make`). On Windows use `python demo.py` and the commands under
+[Running the pieces separately](#running-the-pieces-separately).
+
 To get the code: clone this repository if you have access, or, if you were sent
 `xill4-sandbox-phase0.bundle`, save that file and clone from it directly — a bundle is a
 complete repository in one file:
