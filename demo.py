@@ -73,7 +73,7 @@ def main() -> int:
     documents = sorted(p for p in (SANDBOX / "source").rglob("*")
                        if p.is_file() and p.name != "metadata.csv")
     print(f"   source/ holds {len(documents)} documents plus the client's metadata.csv")
-    print(f"   e.g. {documents[1].relative_to(SANDBOX / 'source')}")
+    print(f"   e.g. {documents[1].relative_to(SANDBOX / 'source').as_posix()}")
     expect("answer key is generated outside source/ and target/",
            (SANDBOX / ".expected").is_dir(), True)
 

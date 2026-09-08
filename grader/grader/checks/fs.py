@@ -22,8 +22,14 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _relative_files(root: Path, pattern: str) -> list[Path]:
-    return sorted(p.relative_to(root) for p in root.glob(pattern) if p.is_file())
+def _relative_files(root: Path, pattern: str) -> list[str]:
+    """Relative paths under `root`, always with forward slashes.
+
+    Windows hands back backslashes, while every path stored in a manifest, a CSV or a
+    scenario file uses forward slashes. Normalising here -- at the one boundary where
+    filesystem paths become data -- is what keeps grading identical on both platforms.
+    """
+    return sorted(p.relative_to(root).as_posix() for p in root.glob(pattern) if p.is_file())
 
 
 @check("fs.file_count")
@@ -37,7 +43,7 @@ def file_count(params: dict[str, Any], ctx: Context) -> Outcome:
     matches = _relative_files(root, pattern)
     label = f"files matching {pattern!r} under {root.name}"
     outcome = compare_number(len(matches), params, label, ctx)
-    outcome.evidence["sample"] = [str(p) for p in matches[:_MAX_REPORTED]]
+    outcome.evidence["sample"] = matches[:_MAX_REPORTED]
     return outcome
 
 
@@ -60,7 +66,7 @@ def tree_matches(params: dict[str, Any], ctx: Context) -> Outcome:
             {"path": str(root), "missing": sorted(expected)[:_MAX_REPORTED]},
         )
 
-    actual = {str(p) for p in _relative_files(root, "**/*")}
+    actual = set(_relative_files(root, "**/*"))
     missing = sorted(set(expected) - actual)
     unexpected = sorted(actual - set(expected))
 

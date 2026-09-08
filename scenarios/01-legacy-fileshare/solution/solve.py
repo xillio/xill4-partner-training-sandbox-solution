@@ -54,15 +54,17 @@ def solve(workspace: Path) -> None:
     source, target = workspace / "source", workspace / "target"
     target.mkdir(exist_ok=True)
 
+    # as_posix(), not str(): metadata.csv records paths with forward slashes, so comparing
+    # against a Windows backslash path would match nothing.
     files_on_share = sorted(
-        path.relative_to(source) for path in source.rglob("*")
+        path.relative_to(source).as_posix() for path in source.rglob("*")
         if path.is_file() and path.name != "metadata.csv"
     )
 
     # 1. Inventory
     (target / "manifest.json").write_text(json.dumps({"documents": [
         {
-            "path": str(relpath),
+            "path": relpath,
             "bytes": (source / relpath).stat().st_size,
             "sha256": hashlib.sha256((source / relpath).read_bytes()).hexdigest(),
         }
@@ -75,8 +77,8 @@ def solve(workspace: Path) -> None:
     described = {record["file_path"] for record in records}
     exceptions = [(record["file_path"], "missing_file") for record in records
                   if not (source / record["file_path"]).is_file()]
-    exceptions += [(str(relpath), "no_metadata") for relpath in files_on_share
-                   if str(relpath) not in described]
+    exceptions += [(relpath, "no_metadata") for relpath in files_on_share
+                   if relpath not in described]
 
     # 2 and 3. Transform, then load
     migrated = []

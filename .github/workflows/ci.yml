@@ -7,7 +7,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Windows is not optional here. A path-separator bug in the grader passed every Linux
+    # check and failed on the first Windows machine it met, because paths read off the
+    # filesystem were compared against paths stored with forward slashes. Trainers and
+    # trainees run Windows, so CI has to as well.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,8 +29,14 @@ jobs:
         # Includes, for every scenario in the repo: its reference solution scores 100, and
         # an untouched workspace scores 0. A scenario that fails either is not shippable.
         run: pytest
+      - name: Prove the loop the same way a reader does
+        # Asserts all five claims in the README, including that a broken workspace loses
+        # exactly the task it broke.
+        run: python demo.py
 
   end-to-end:
+    # provision.sh is bash, so this job stays on Linux; the grading itself is covered on
+    # both platforms by the matrix above.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,10 +44,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install PyYAML
-      - name: Prove the loop the same way a reader does
-        # Asserts all five claims in the README, including that a broken workspace loses
-        # exactly the task it broke.
-        run: python demo.py
       - name: Provision a workspace the way the control plane does
         run: ./workspace/provision.sh ci-trainee 01-legacy-fileshare
       - run: make solve WORKSPACE=.workspaces/ci-trainee/01-legacy-fileshare

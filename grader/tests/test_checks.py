@@ -44,6 +44,22 @@ def test_explicit_variables_override_the_conventional_layout(tmp_path):
     assert built.expand("${TARGET}") == "/mnt/somewhere-else"
 
 
+def test_relative_paths_are_reported_with_forward_slashes(ctx, tmp_path):
+    """Paths that become data must be canonical, whatever separator the OS uses.
+
+    Manifests, CSVs and scenario files all store forward slashes. A grader that compared
+    them against Windows backslashes matched nothing: it reported every file as missing and
+    every file as unexpected, and scored a correct migration 40/100.
+    """
+    nested = tmp_path / "target" / "finance" / "2019"
+    nested.mkdir(parents=True)
+    (nested / "report.pdf").write_text("x")
+
+    outcome = run_check("fs.file_count", {"path": "${TARGET}", "equals": 1}, ctx)
+    assert outcome.evidence["sample"] == ["finance/2019/report.pdf"]
+    assert not any("\\" in entry for entry in outcome.evidence["sample"])
+
+
 def test_fs_exists_reports_missing_paths(ctx):
     outcome = run_check("fs.exists", {"path": "${TARGET}/manifest.json", "kind": "file"}, ctx)
     assert not outcome.passed and "missing" in outcome.message
