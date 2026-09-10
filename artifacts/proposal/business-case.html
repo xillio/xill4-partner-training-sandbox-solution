@@ -1,0 +1,598 @@
+<title>Xill4 Sandbox Business Case</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ground:#f6f8f7; --surface:#ffffff; --sunk:#eef2f1;
+    --ink:#141e1c; --muted:#586462; --faint:#7d8a88;
+    --accent:#0e6b60; --accent-w:#e2efec;
+    --signal:#8f5c07; --signal-w:#f6eddc;
+    --rule:#dce3e1; --rule-hi:#c3cfcc;
+    --serif:"IBM Plex Serif",Georgia,serif;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --measure:68ch; --rail:8.5rem;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0d1312; --surface:#151d1c; --sunk:#101817;
+    --ink:#e4ebe9; --muted:#97a6a3; --faint:#7b8a87;
+    --accent:#4cc0ae; --accent-w:#14302c;
+    --signal:#dca050; --signal-w:#2e2417;
+    --rule:#253231; --rule-hi:#354645;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0d1312; --surface:#151d1c; --sunk:#101817;
+    --ink:#e4ebe9; --muted:#97a6a3; --faint:#7b8a87;
+    --accent:#4cc0ae; --accent-w:#14302c;
+    --signal:#dca050; --signal-w:#2e2417;
+    --rule:#253231; --rule-hi:#354645;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+       font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .page{max-width:60rem;margin:0 auto;padding:3.5rem 1.5rem 5rem}
+
+  .masthead{border-bottom:1px solid var(--rule);padding-bottom:1.5rem}
+  .kicker{font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+          color:var(--accent);margin:0 0 .8rem}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,4.4vw,2.7rem);line-height:1.1;
+     letter-spacing:-.018em;text-wrap:balance;margin:0 0 .7rem}
+  .standfirst{font-family:var(--serif);font-size:1.1rem;line-height:1.5;color:var(--muted);
+              max-width:52ch;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:.3rem 1.5rem;margin-top:1.2rem;
+        font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;color:var(--faint)}
+
+  section{display:grid;grid-template-columns:var(--rail) minmax(0,var(--measure));
+          gap:0 2.25rem;padding-top:2.75rem}
+  section>*{grid-column:2}
+  .eyebrow{grid-column:1;grid-row:span 60;font-family:var(--mono);font-size:.66rem;
+           letter-spacing:.13em;text-transform:uppercase;color:var(--faint);padding-top:.45rem;
+           position:sticky;top:1.25rem;align-self:start}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.42rem;line-height:1.22;
+     letter-spacing:-.012em;text-wrap:balance;margin:0 0 .8rem}
+  p{margin:0 0 .8rem}
+  p:last-child{margin-bottom:0}
+  .full{grid-column:1/-1}
+
+  ul{margin:0;padding:0;list-style:none}
+  ul li{position:relative;padding-left:1.05rem;margin-bottom:.5rem}
+  ul li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;
+                border-radius:50%;background:var(--rule-hi)}
+  ul li b{font-weight:600}
+  ul li span{color:var(--muted)}
+  ul.tight li{margin-bottom:.35rem}
+
+  code{font-family:var(--mono);font-size:.85em;background:var(--sunk);border:1px solid var(--rule);
+       border-radius:3px;padding:.06em .3rem}
+
+  /* the ask */
+  .ask{border:1px solid var(--accent);background:var(--accent-w);border-radius:6px;
+       padding:1.25rem 1.4rem}
+  .ask h3{margin:0 0 .6rem;font-size:.7rem;font-family:var(--mono);letter-spacing:.13em;
+          text-transform:uppercase;color:var(--accent)}
+  .ask ul li::before{background:var(--accent)}
+
+  /* stat tiles: no plots, so no series colour -- values wear ink, one accent for the key figure */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.4rem,1fr));
+         gap:0;border-top:1px solid var(--rule-hi)}
+  .stat{border-bottom:1px solid var(--rule);padding:.9rem 1.1rem .9rem 0}
+  .stat .v{font-size:1.5rem;font-weight:600;letter-spacing:-.02em;
+           font-variant-numeric:tabular-nums;line-height:1.15}
+  .stat .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;
+           color:var(--faint);margin-top:.25rem}
+  .stat.key .v{color:var(--accent)}
+
+  .callout{border-left:3px solid var(--accent);padding:.15rem 0 .15rem 1rem;margin:1.1rem 0;
+           font-family:var(--serif);font-size:1.02rem;line-height:1.5;color:var(--ink)}
+
+  .scroller{overflow-x:auto;margin-top:1rem}
+  table{border-collapse:collapse;width:100%;min-width:34rem;font-size:.88rem}
+  th,td{text-align:left;padding:.55rem 1rem .55rem 0;vertical-align:top}
+  th{font-family:var(--mono);font-weight:500;font-size:.64rem;letter-spacing:.1em;
+     text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--rule-hi);
+     padding-bottom:.45rem}
+  td{border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.lean td{background:var(--accent-w)}
+  tr.lean td:first-child{box-shadow:inset 3px 0 0 var(--accent);padding-left:.85rem}
+  tr.mark td:first-child{box-shadow:inset 3px 0 0 var(--accent);padding-left:.85rem}
+  tr.mark td:first-child b{color:var(--accent)}
+  .note{font-size:.8rem;color:var(--faint);margin-top:.6rem}
+
+  .chip{font-family:var(--mono);font-size:.61rem;letter-spacing:.1em;text-transform:uppercase;
+        padding:.14rem .45rem;border-radius:2px;font-weight:500;white-space:nowrap}
+  .chip.ok{background:var(--accent-w);color:var(--accent)}
+  .chip.tbc{background:var(--signal-w);color:var(--signal)}
+
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1.5rem}
+  .cols h3{font-size:.92rem;font-weight:600;margin:0 0 .5rem}
+  .cols .sub{font-family:var(--mono);font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
+             color:var(--faint);margin:0 0 .5rem}
+
+  .phase{display:grid;grid-template-columns:5rem 1fr;gap:0 1rem;padding:.85rem 0;
+         border-bottom:1px solid var(--rule)}
+  .phases{border-top:1px solid var(--rule-hi)}
+  .phase .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;
+            color:var(--faint);padding-top:.15rem}
+  .phase h4{font-size:.95rem;font-weight:600;margin:0 0 .3rem}
+  .phase ul li{margin-bottom:.25rem;font-size:.87rem}
+
+  /* feedback */
+  .fb{margin-top:1.4rem;border-top:1px dashed var(--rule-hi);padding-top:.8rem}
+  .fb-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+  .fb-label{font-family:var(--mono);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
+            color:var(--faint)}
+  button{font-family:var(--sans);font-size:.8rem;font-weight:500;cursor:pointer;
+         background:var(--surface);color:var(--ink);border:1px solid var(--rule-hi);
+         border-radius:4px;padding:.3rem .7rem}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+  button.primary:hover{opacity:.9;color:var(--surface)}
+  button[disabled]{opacity:.45;cursor:default}
+  .fb-form{display:none;gap:.5rem;margin-top:.7rem;flex-direction:column}
+  .fb-form.open{display:flex}
+  .fb-row{display:flex;gap:.5rem;flex-wrap:wrap}
+  textarea,input,select{font-family:var(--sans);font-size:.87rem;color:var(--ink);
+    background:var(--surface);border:1px solid var(--rule-hi);border-radius:4px;padding:.4rem .55rem}
+  textarea{width:100%;min-height:4.5rem;resize:vertical;line-height:1.5}
+  input{flex:1 1 11rem;min-width:0}
+  .fb-list{list-style:none;margin:.7rem 0 0;padding:0;display:flex;flex-direction:column;gap:.55rem}
+  .fb-list li{padding-left:0;margin:0}
+  .fb-list li::before{display:none}
+  .fb-item{background:var(--sunk);border:1px solid var(--rule);border-radius:4px;padding:.6rem .75rem}
+  .fb-item .who{font-size:.74rem;color:var(--faint);font-family:var(--mono);display:flex;
+                gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:.25rem}
+  .fb-item .body{font-size:.88rem;white-space:pre-wrap;overflow-wrap:break-word}
+  .fb-empty{font-size:.8rem;color:var(--faint);margin:.6rem 0 0}
+  .fb-status{font-size:.78rem;color:var(--faint);margin:.4rem 0 0}
+  a{color:var(--accent)}
+  a:focus-visible,button:focus-visible,textarea:focus-visible,input:focus-visible,
+  select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .close{margin-top:3rem;border-top:1px solid var(--rule);padding-top:1.1rem;
+         font-size:.8rem;color:var(--faint);font-family:var(--mono);line-height:1.65}
+
+  @media (max-width:760px){
+    :root{--rail:0}
+    section{grid-template-columns:minmax(0,1fr);gap:0}
+    section>*{grid-column:1}
+    .eyebrow{grid-row:auto;position:static;margin-bottom:.6rem;padding-top:0}
+    .stat{padding-right:.6rem}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="kicker">Budget proposal &middot; Partner training</p>
+    <h1>A Xillio-owned sandbox for partner training</h1>
+    <p class="standfirst">Own the training environment instead of borrowing the partner's &mdash; so exercises can be designed, paced and verified automatically.</p>
+    <div class="meta">
+      <span>KAMIL BEELI DE BELFORT</span>
+      <span>DECISION: BUDGET APPROVAL</span>
+      <span>DECISION BY FRIDAY 25 SEPTEMBER 2026</span>
+      <span>FEEDBACK WELCOME ON EVERY SECTION</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">The ask</p>
+    <div class="ask">
+      <h3>What is being requested</h3>
+      <ul class="tight">
+        <li><b>A phased budget of &euro;16,000&ndash;26,400</b> <span>&mdash; engineering time to a cohort-ready sandbox</span></li>
+        <li><b>Released one phase at a time</b> <span>&mdash; go/no-go at each boundary</span></li>
+        <li><b>Phase 1 only, to start: &euro;4,000&ndash;6,400</b> <span>&mdash; a working sandbox and a measured pilot</span></li>
+        <li><b>Payback inside the first year</b> <span>&mdash; on trainer hours alone</span></li>
+        <li><b>Decision requested by Friday 25 September 2026</b> <span>&mdash; feedback on this page until Friday 19 September</span></li>
+      </ul>
+    </div>
+    <div class="fb" data-section="ask" data-title="The ask"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">At a glance</p>
+    <div class="stats full">
+      <div class="stat"><div class="v">&euro;10,000</div><div class="k">per cohort, fixed</div></div>
+      <div class="stat"><div class="v">40 h</div><div class="k">trainer h / cohort</div></div>
+      <div class="stat"><div class="v">15+</div><div class="k">cohorts a year</div></div>
+      <div class="stat"><div class="v">3 &rarr; 4</div><div class="k">partner trainers</div></div>
+      <div class="stat key"><div class="v">~43%</div><div class="k">hours addressable</div></div>
+      <div class="stat"><div class="v">2mo&rarr;4wk</div><div class="k">ramp-up target</div></div>
+    </div>
+    <p class="note">Hours from Harvest, one representative cohort. The 43% is illustrative and is what the pilot is designed to confirm or refute.</p>
+  </section>
+
+  <section>
+    <p class="eyebrow">Problem</p>
+    <h2>We don&rsquo;t own the environment the training runs on</h2>
+    <p>Today trainees work in an environment the partner provides. Five consequences follow:</p>
+    <ul>
+      <li><b>No control</b> <span>&mdash; what is installed, what data exists, when it is available</span></li>
+      <li><b>Exercises can&rsquo;t be designed in advance</b> <span>&mdash; the data isn&rsquo;t ours</span></li>
+      <li><b>Pacing depends on someone else&rsquo;s IT</b> <span>&mdash; training stalls when the environment isn&rsquo;t ready</span></li>
+      <li><b>No two partners get the same training</b> <span>&mdash; so outcomes vary by partner, not by engineer</span></li>
+      <li><b>Hands-on work can&rsquo;t be verified automatically</b> <span>&mdash; we don&rsquo;t know what &ldquo;correct&rdquo; looks like in their environment</span></li>
+    </ul>
+    <div class="fb" data-section="problem" data-title="Problem"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Proposal</p>
+    <h2>A sandbox Xillio owns, with exercises Xillio authors</h2>
+    <ul>
+      <li><b>One isolated Xill4 instance per trainee</b> <span>&mdash; reached in a browser, no partner setup</span></li>
+      <li><b>An exercise per topic</b> <span>&mdash; controlled scope, defined outcome, realistic messy data</span></li>
+      <li><b>Automatic verification</b> <span>&mdash; scored in seconds, with the specific wrong value named</span></li>
+      <li><b>Progress recorded per trainee, per topic</b> <span>&mdash; not one pass/fail at the end</span></li>
+      <li><b>Partner picks the source and target systems</b> <span>&mdash; practice matches the migration they were contracted to deliver</span></li>
+    </ul>
+    <p class="callout">Because Xillio authors the extraction scope, the transformation rules and the target structure, the correct outcome is known before the trainee starts. That is what makes automatic verification possible &mdash; and why it cannot be done in an environment the partner provides.</p>
+    <p>Precedent: the practical Xill4 exam is already marked automatically. This extends that from one exam at the end to every topic along the way.</p>
+    <div class="fb" data-section="proposal" data-title="Proposal"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Hours</p>
+    <h2>Where the trainer&rsquo;s 40 hours go</h2>
+    <div class="scroller full">
+      <table>
+        <thead><tr><th>Task</th><th>Hours</th><th>Share</th><th>Effect of a sandbox</th></tr></thead>
+        <tbody>
+          <tr class="mark"><td><b>Support &amp; Q&amp;A</b></td><td class="num">12.00</td><td class="num">30%</td><td><b>Large</b> &mdash; instant feedback answers most &ldquo;did it work?&rdquo; questions</td></tr>
+          <tr class="mark"><td><b>Project artifacts</b> <span class="chip tbc">non-billable</span></td><td class="num">10.50</td><td class="num">26%</td><td><b>Partial</b> &mdash; progress evidence and reports generate themselves</td></tr>
+          <tr class="mark"><td><b>Xill4 setup</b></td><td class="num">8.25</td><td class="num">20%</td><td><b>Near-total</b> &mdash; provisioning replaces manual install</td></tr>
+          <tr><td>Teaching sessions</td><td class="num">7.25</td><td class="num">18%</td><td>Small &mdash; reshaped into stand-ups, not removed</td></tr>
+          <tr><td>Kick-offs</td><td class="num">2.50</td><td class="num">6%</td><td>None</td></tr>
+        </tbody>
+      </table>
+      <p class="note">One representative cohort, from Harvest. Illustrative reduction: setup 8.25&rarr;1 h, support 12&rarr;6 h, artifacts 10.5&rarr;6 h &mdash; about <b>17.5 hours of 40.5</b>. A quarter of the cohort is non-billable, so those hours are pure cost.</p>
+      <p class="note">A separate, atypical engagement ran to 20 hours of internal preparation because a trainer hand-built Azure VMs so the partner could train at all. That is the cost of not having a sandbox, done manually, once per partner.</p>
+    </div>
+    <div class="fb" data-section="hours" data-title="Hours"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Delivery</p>
+    <h2>How the training itself changes</h2>
+    <ul>
+      <li><b>Long workshops become short stand-ups</b> <span>&mdash; next tasks, review the last one, deadlines per trainee</span></li>
+      <li><b>Deadline per exercise, per trainee</b> <span>&mdash; a miss means nothing was submitted, never a failed attempt</span></li>
+      <li><b>One grace deferral per course</b> <span>&mdash; stated in the joining terms, not discovered at enforcement</span></li>
+      <li><b>Two misses: automatic notice</b> <span>&mdash; to the trainee and the partner contact. Third: the trainer decides.</span></li>
+      <li><b>The cohort is never held back</b> <span>&mdash; a trainee who falls behind finishes self-paced within a fixed window after the end date</span></li>
+      <li><b>Sandboxes outlive the cohort</b> <span>&mdash; through that window, with a hard expiry; the trainer is not on support during it</span></li>
+    </ul>
+    <p class="note">Self-paced completion is only offerable because marking is automatic. It is a consequence of the sandbox, not a policy beside it.</p>
+    <div class="fb" data-section="delivery" data-title="Delivery"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Phases</p>
+    <h2>Four phases, each with a gate</h2>
+    <div class="phases full">
+      <div class="phase">
+        <div class="n">Phase 1</div>
+        <div>
+          <h4>One sandbox, and a measured pilot</h4>
+          <ul class="tight">
+            <li><span>Provision a Xill4 container per trainee, seed the data, run one exercise end to end with a real person</span></li>
+            <li><b>Needs</b> <span>&mdash; registry token, training licence key, a host, new Harvest project</span></li>
+            <li><b>Gate</b> <span>&mdash; target hours met, and the trainee judges the marking fair</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="n">Phase 2</div>
+        <div>
+          <h4>Cohort-ready</h4>
+          <ul class="tight">
+            <li><span>Provisioning for a full cohort, sign-in for external trainees, both dashboards, automated notices</span></li>
+            <li><b>Gate</b> <span>&mdash; first cohort delivered on the sandbox; Harvest shows the hours falling</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="n">Phase 3</div>
+        <div>
+          <h4>Exercise library</h4>
+          <ul class="tight">
+            <li><span>One exercise per topic, so stand-ups can replace workshops. Progression unlocks as trainees pass.</span></li>
+            <li><b>Needs</b> <span>&mdash; a day or two per exercise from whoever owns the material</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="phase">
+        <div class="n">Phase 4</div>
+        <div>
+          <h4>Self-service enrolment</h4>
+          <ul class="tight">
+            <li><span>Partners enrol when they need to; more source and target systems added as demand appears</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="fb" data-section="phases" data-title="Phases"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Systems</p>
+    <h2>Which systems trainees practise against</h2>
+    <p>A source is read, a target is written &mdash; so a cohort shares one source, but each trainee needs their own target space.</p>
+    <div class="scroller full">
+      <table>
+        <thead><tr><th>System</th><th>Role</th><th>Isolation per trainee</th><th>Effort</th></tr></thead>
+        <tbody>
+          <tr><td>File share</td><td>Source or target</td><td>A mounted folder</td><td class="num">available first</td></tr>
+          <tr><td>Object storage</td><td>Target</td><td>A bucket or prefix</td><td class="num">small</td></tr>
+          <tr><td>SharePoint Online <span class="chip ok">Migration API</span></td><td>Target</td><td>A folder in one shared target site</td><td class="num">medium</td></tr>
+          <tr><td>OpenText Content Server</td><td>Source</td><td>None needed &mdash; one instance, read-only</td><td class="num">demo VM in place</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Each system needs one <b>adapter</b>, built once, then usable by every exercise &mdash; so a menu of combinations does not mean a matrix of exercises. Trainees can see each other&rsquo;s folders harmlessly: each has different seed data, so a copied migration scores zero.</p>
+      <p class="note">Both ends of <b>OpenText Content Server &rarr; SharePoint Online</b> are already available to us &mdash; the OTCS demo VM as a shared read-only source, SharePoint Online as the target. That is the migration partners most often have to deliver, and it can be the first realistic end-to-end exercise.</p>
+    </div>
+    <div class="fb" data-section="systems" data-title="Systems"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Dashboards</p>
+    <h2>Two dashboards, split on a trust boundary</h2>
+    <div class="cols">
+      <div>
+        <p class="sub">Internal &mdash; PO and trainer</p>
+        <ul class="tight">
+          <li>All cohorts; progress per trainee, per topic</li>
+          <li>Attention list: <b>stuck</b> vs <b>silent</b> &mdash; different problems</li>
+          <li>Which exercise a whole cohort fails &mdash; the material, not the trainees</li>
+          <li><b>Trainer hours per cohort, as a trend</b> &mdash; from Harvest</li>
+          <li>Cohorts per quarter, completion, capacity</li>
+        </ul>
+      </div>
+      <div>
+        <p class="sub">External &mdash; trainee and partner</p>
+        <ul class="tight">
+          <li>Trainee sees only their own progress and deadlines</li>
+          <li>Partner contact sees only their own engineers</li>
+          <li><b>Never hours, never cost, never other trainees</b></li>
+          <li>Completion evidence per topic, generated</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Trainees are external, so this is a security boundary rather than a layout choice.</p>
+    <div class="fb" data-section="dashboards" data-title="Dashboards"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Proof</p>
+    <h2>How we will know whether it worked</h2>
+    <ul>
+      <li><b>A new Harvest project is a requirement of running the pilot</b> <span>&mdash; not a recommendation</span></li>
+      <li><b>Its tasks roll up to today&rsquo;s categories</b> <span>&mdash; so the pilot compares against real past cohorts, not a blank page</span></li>
+      <li><b>Baseline fixed before the pilot starts</b> <span>&mdash; from cohorts already logged</span></li>
+      <li><b>The pilot passes only if both hold</b> <span>&mdash; the hour target is met, and a real trainee judges the marking fair</span></li>
+    </ul>
+    <p class="note">The request is therefore self-auditing: approval rests on a claimed reduction, and Harvest settles it by the third or fourth cohort.</p>
+    <div class="fb" data-section="proof" data-title="Proof"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Cost</p>
+    <h2>Cost and payback</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>One-off build</th><th>Effort</th><th>At &euro;800/day</th></tr></thead>
+        <tbody>
+          <tr><td>Phase 1 &mdash; sandbox and pilot</td><td class="num">5&ndash;8 days</td><td class="num">&euro;4,000&ndash;6,400</td></tr>
+          <tr><td>Phase 2 &mdash; cohort-ready</td><td class="num">15&ndash;25 days</td><td class="num">&euro;12,000&ndash;20,000</td></tr>
+          <tr class="lean"><td><b>Total</b></td><td class="num">20&ndash;33 days</td><td class="num">&euro;16,000&ndash;26,400</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul style="margin-top:1rem">
+      <li><b>Recurring:</b> <span>one shared host per cohort (low hundreds &euro;/month, less when shut down outside training hours); &euro;800&ndash;1,600 per new exercise, written once and reused forever</span></li>
+      <li><b>Return:</b> <span>~17.5 hours saved per cohort &asymp; &euro;1,750; at 15 cohorts, <b>~&euro;26,000 a year</b></span></li>
+      <li><b>Shape of the return:</b> <span>price per cohort is fixed, so hours saved improve margin and release senior capacity &mdash; a quarter of them are non-billable today</span></li>
+      <li><b>Not counted:</b> <span>ramp-up falling from two months to four weeks, and Xill4 no longer absorbing work partners were contracted to do</span></li>
+    </ul>
+    <p class="note">Effort figures are estimates. Phase 1&rsquo;s purpose includes replacing the Phase 2 estimate with a measurement, which is why the two amounts are released separately.</p>
+    <div class="fb" data-section="cost" data-title="Cost"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Risks</p>
+    <h2>Risks</h2>
+    <ul>
+      <li><b>Container resource use is unknown</b> <span>&mdash; fewer sandboxes per host would raise Phase 2 hosting. Phase 1 measures it first.</span></li>
+      <li><b>Exercise authoring is the real ongoing cost</b> <span>&mdash; infrastructure is cheap; curriculum is the investment. Plan for it.</span></li>
+      <li><b>Trainee work lives in MongoDB</b> <span>&mdash; keeping or resetting it is a database design task, not an afterthought.</span></li>
+      <li><b>Live cloud targets can fail correct work</b> <span>&mdash; jobs queue and throttle. Stand-ins teach technique; real services only where their friction is the lesson.</span></li>
+      <li><b>Licence terms per instance</b> <span>&mdash; expected fine for training-only use, worth confirming in writing before Phase 2.</span></li>
+    </ul>
+    <div class="fb" data-section="risks" data-title="Risks"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Decision</p>
+    <h2>What Phase 1 approval unlocks</h2>
+    <ul>
+      <li>Work starts the same week &mdash; pull the image, stand up one sandbox, seed it, run a real person through one exercise</li>
+      <li>Produces the three things a Phase 2 decision needs: a working sandbox, measured cost per trainee, and a verdict on whether the marking is fair</li>
+      <li><b>Recommended:</b> approve Phases 1 and 2 with a ceiling, release Phase 1 now, hold Phase 2 until Phase 1 reports</li>
+      <li><b>Decision by Friday 25 September 2026</b> &mdash; <span>comments on this page close Friday 19 September, leaving a week to fold them in and decide</span></li>
+    </ul>
+    <div class="fb" data-section="decision" data-title="Decision"></div>
+  </section>
+
+  <p class="close">
+    Key users: leave comments in the boxes on each section rather than by email &mdash;
+    everyone reviewing sees them, and they go into the next revision.<br>
+    <span id="fb-global-status"></span>
+  </p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var STANCES = ["Comment", "Support", "Support with changes", "Concern"];
+  var NAME_KEY = "xill4-case-author";
+  var db = null;
+  var blocks = [];
+
+  function remembered() {
+    try { return window.localStorage.getItem(NAME_KEY) || ""; } catch (e) { return ""; }
+  }
+  function remember(name) {
+    try { window.localStorage.setItem(NAME_KEY, name); } catch (e) { /* private mode */ }
+  }
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function build(container) {
+    var section = container.getAttribute("data-section");
+    var title = container.getAttribute("data-title") || section;
+
+    var head = el("div", "fb-head");
+    head.appendChild(el("span", "fb-label", "Feedback — " + title));
+    var toggle = el("button", null, "Add feedback");
+    toggle.type = "button";
+    toggle.disabled = true;
+    head.appendChild(toggle);
+    container.appendChild(head);
+
+    var list = el("ul", "fb-list");
+    container.appendChild(list);
+    var empty = el("p", "fb-empty", "Loading…");
+    container.appendChild(empty);
+
+    var form = el("form", "fb-form");
+    var body = el("textarea");
+    body.placeholder = "What would you change, add, or challenge?";
+    body.required = true;
+    form.appendChild(body);
+
+    var row = el("div", "fb-row");
+    var name = el("input");
+    name.placeholder = "Your name";
+    name.value = remembered();
+    name.required = true;
+    row.appendChild(name);
+    var stance = el("select");
+    STANCES.forEach(function (option) {
+      var opt = el("option", null, option);
+      opt.value = option;
+      stance.appendChild(opt);
+    });
+    row.appendChild(stance);
+    var submit = el("button", "primary", "Post");
+    submit.type = "submit";
+    row.appendChild(submit);
+    form.appendChild(row);
+
+    var status = el("p", "fb-status");
+    form.appendChild(status);
+    container.appendChild(form);
+
+    toggle.addEventListener("click", function () {
+      form.classList.toggle("open");
+      if (form.classList.contains("open")) body.focus();
+    });
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (!db) return;
+      var text = body.value.trim();
+      var who = name.value.trim();
+      if (!text || !who) return;
+      submit.disabled = true;
+      status.textContent = "Posting…";
+      remember(who);
+      db.collection("feedback").add({
+        section: section, author: who, stance: stance.value,
+        body: text, createdAt: new Date().toISOString()
+      }).then(function () {
+        body.value = "";
+        status.textContent = "";
+        form.classList.remove("open");
+      })["catch"](function (error) {
+        status.textContent = error && error.code === "not_granted"
+          ? "Feedback is not available in this view."
+          : "Could not post that — please try again.";
+      }).then(function () { submit.disabled = false; });
+    });
+
+    return { section: section, list: list, empty: empty, toggle: toggle };
+  }
+
+  document.querySelectorAll(".fb").forEach(function (container) {
+    blocks.push(build(container));
+  });
+
+  function render(snapshot) {
+    var bySection = {};
+    snapshot.docs.forEach(function (doc) {
+      var row = doc.data() || {};
+      var key = typeof row.section === "string" ? row.section : "";
+      (bySection[key] = bySection[key] || []).push(row);
+    });
+    blocks.forEach(function (block) {
+      var rows = bySection[block.section] || [];
+      block.list.textContent = "";
+      rows.forEach(function (row) {
+        var item = el("li", "fb-item");
+        var who = el("div", "who");
+        who.appendChild(el("span", null, String(row.author || "Anonymous")));
+        if (row.stance && row.stance !== "Comment") {
+          who.appendChild(el("span", "chip ok", String(row.stance)));
+        }
+        if (typeof row.createdAt === "string") {
+          who.appendChild(el("span", null, row.createdAt.slice(0, 10)));
+        }
+        item.appendChild(who);
+        item.appendChild(el("div", "body", String(row.body || "")));
+        block.list.appendChild(item);
+      });
+      block.empty.textContent = rows.length ? "" : "No feedback yet.";
+      block.empty.hidden = rows.length > 0;
+    });
+  }
+
+  function unavailable(message) {
+    blocks.forEach(function (block) {
+      block.toggle.disabled = true;
+      block.empty.textContent = message;
+      block.empty.hidden = false;
+    });
+  }
+
+  if (!window.claude || typeof window.claude.use !== "function") {
+    unavailable("Feedback is only available on the published page.");
+    return;
+  }
+
+  window.claude.use("db").then(function (store) {
+    if (!store) {
+      unavailable("Feedback is not available in this view.");
+      document.getElementById("fb-global-status").textContent =
+        "Feedback could not load here — open the published link while signed in.";
+      return;
+    }
+    db = store;
+    blocks.forEach(function (block) { block.toggle.disabled = false; });
+    db.collection("feedback").orderBy("createdAt").onSnapshot(render, function (error) {
+      unavailable(error && error.code === "revoked"
+        ? "Feedback access ended for this session — reload the page."
+        : "Feedback could not load — reload the page.");
+    });
+  })["catch"](function () {
+    unavailable("Feedback could not load — reload the page.");
+  });
+})();
+</script>

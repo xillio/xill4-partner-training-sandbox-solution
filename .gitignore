@@ -6,6 +6,12 @@ __pycache__/
 .workspaces/
 workspace/.env
 
-# Generated artifacts: proposals, decks, bundles, render previews.
-# Kept out of git deliberately -- see artifacts/README.md.
-artifacts/
+# Generated artifacts. Text worth reviewing is tracked; binaries and previews
+# are not. A directory cannot be re-included once excluded, so the contents are
+# ignored one level at a time rather than the folder as a whole.
+artifacts/*
+!artifacts/README.md
+!artifacts/proposal/
+!artifacts/deck/
+artifacts/deck/*
+!artifacts/deck/build.js

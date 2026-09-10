@@ -1,0 +1,766 @@
+<title>Xill4 Sandbox Business Case</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ground:#f6f8f7; --surface:#ffffff; --sunk:#eef2f1;
+    --ink:#141e1c; --muted:#586462; --faint:#7d8a88;
+    --accent:#0e6b60; --accent-w:#e2efec;
+    --signal:#8f5c07; --signal-w:#f6eddc;
+    --rule:#dce3e1; --rule-hi:#c3cfcc;
+    --serif:"IBM Plex Serif",Georgia,serif;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --measure:66ch; --rail:9.5rem;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0d1312; --surface:#151d1c; --sunk:#101817;
+    --ink:#e4ebe9; --muted:#97a6a3; --faint:#7b8a87;
+    --accent:#4cc0ae; --accent-w:#14302c;
+    --signal:#dca050; --signal-w:#2e2417;
+    --rule:#253231; --rule-hi:#354645;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0d1312; --surface:#151d1c; --sunk:#101817;
+    --ink:#e4ebe9; --muted:#97a6a3; --faint:#7b8a87;
+    --accent:#4cc0ae; --accent-w:#14302c;
+    --signal:#dca050; --signal-w:#2e2417;
+    --rule:#253231; --rule-hi:#354645;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+       font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .page{max-width:62rem;margin:0 auto;padding:4rem 1.5rem 6rem}
+
+  .masthead{border-bottom:1px solid var(--rule);padding-bottom:2rem}
+  .kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+          color:var(--accent);margin:0 0 1rem}
+  h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.1rem,4.8vw,3.1rem);line-height:1.08;
+     letter-spacing:-.018em;text-wrap:balance;margin:0 0 1rem}
+  .standfirst{font-family:var(--serif);font-size:clamp(1.05rem,2vw,1.22rem);line-height:1.55;
+              color:var(--muted);max-width:54ch;margin:0}
+  .meta{display:flex;flex-wrap:wrap;gap:.4rem 1.6rem;margin-top:1.6rem;
+        font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:var(--faint)}
+
+  section{display:grid;grid-template-columns:var(--rail) minmax(0,var(--measure));
+          gap:0 2.5rem;padding-top:3.5rem}
+  section>*{grid-column:2}
+  .eyebrow{grid-column:1;grid-row:span 60;font-family:var(--mono);font-size:.68rem;
+           letter-spacing:.13em;text-transform:uppercase;color:var(--faint);padding-top:.5rem;
+           position:sticky;top:1.5rem;align-self:start}
+  h2{font-family:var(--serif);font-weight:600;font-size:1.6rem;line-height:1.2;
+     letter-spacing:-.012em;text-wrap:balance;margin:0 0 1rem}
+  h3{font-weight:600;font-size:1.02rem;margin:1.9rem 0 .4rem}
+  p{margin:0 0 1.05rem}
+  p:last-child{margin-bottom:0}
+  ul{margin:0 0 1.05rem;padding-left:1.15rem}
+  li{margin-bottom:.35rem}
+  code{font-family:var(--mono);font-size:.86em;background:var(--sunk);border:1px solid var(--rule);
+       border-radius:3px;padding:.08em .34em}
+  a{color:var(--accent);text-underline-offset:.18em}
+  a:focus-visible,button:focus-visible,textarea:focus-visible,input:focus-visible,
+  select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .lede{font-size:1.06rem;color:var(--muted)}
+  .full{grid-column:1/-1}
+
+  /* the ask */
+  .ask{border:1px solid var(--accent);background:var(--accent-w);border-radius:6px;
+       padding:1.5rem 1.6rem;margin-top:.5rem}
+  .ask h3{margin:0 0 .5rem;font-size:.72rem;font-family:var(--mono);letter-spacing:.13em;
+          text-transform:uppercase;color:var(--accent)}
+  .ask p{margin:0 0 .6rem}
+  .ask p:last-child{margin:0}
+  .ask strong{font-weight:600}
+
+  figure{margin:2rem 0 0}
+  figure svg{display:block;width:100%;height:auto;color:var(--ink)}
+  figcaption{font-size:.86rem;color:var(--muted);margin-top:.9rem;max-width:62ch}
+
+  .scroller{overflow-x:auto;margin-top:1.5rem}
+  table{border-collapse:collapse;width:100%;min-width:38rem;font-size:.92rem}
+  th,td{text-align:left;padding:.7rem 1rem .7rem 0;vertical-align:top}
+  th{font-family:var(--mono);font-weight:500;font-size:.67rem;letter-spacing:.11em;
+     text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--rule-hi);
+     padding-bottom:.5rem}
+  td{border-bottom:1px solid var(--rule)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.lean td{background:var(--accent-w)}
+  tr.lean td:first-child{box-shadow:inset 3px 0 0 var(--accent);padding-left:1rem}
+  tr.done td:first-child{color:var(--accent)}
+  .tbl-note{font-size:.84rem;color:var(--faint);margin-top:.7rem}
+
+  .chip{font-family:var(--mono);font-size:.63rem;letter-spacing:.11em;text-transform:uppercase;
+        padding:.16rem .48rem;border-radius:2px;font-weight:500;white-space:nowrap}
+  .chip.ok{background:var(--accent-w);color:var(--accent)}
+  .chip.tbc{background:var(--signal-w);color:var(--signal)}
+
+  .phase{display:grid;grid-template-columns:6.5rem 1fr;gap:0 1.25rem;padding:1.15rem 0;
+         border-bottom:1px solid var(--rule)}
+  .phases{margin-top:1.5rem;border-top:1px solid var(--rule)}
+  .phase .n{font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;
+            color:var(--faint);padding-top:.2rem}
+  .phase.done .n{color:var(--accent)}
+  .phase h4{font-size:.99rem;font-weight:600;margin:0 0 .25rem}
+  .phase p{font-size:.93rem;color:var(--muted);margin:0 0 .4rem}
+  .phase dl{display:grid;grid-template-columns:auto 1fr;gap:.15rem .6rem;margin:.5rem 0 0;
+            font-size:.86rem}
+  .phase dt{font-family:var(--mono);font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;
+            color:var(--faint);padding-top:.28rem}
+  .phase dd{margin:0;color:var(--muted)}
+
+  .risk{padding:1.1rem 0;border-bottom:1px solid var(--rule)}
+  .risk:first-of-type{border-top:1px solid var(--rule);margin-top:1.5rem}
+  .risk h4{font-size:.98rem;font-weight:600;margin:0 0 .3rem}
+  .risk p{font-size:.92rem;color:var(--muted);margin:0}
+
+  /* feedback */
+  .fb{margin-top:1.75rem;border-top:1px dashed var(--rule-hi);padding-top:1rem}
+  .fb-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+  .fb-label{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
+            color:var(--faint)}
+  button{font-family:var(--sans);font-size:.83rem;font-weight:500;cursor:pointer;
+         background:var(--surface);color:var(--ink);border:1px solid var(--rule-hi);
+         border-radius:4px;padding:.34rem .8rem}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+  button.primary:hover{opacity:.9;color:var(--surface)}
+  button[disabled]{opacity:.5;cursor:default}
+  .fb-form{display:none;gap:.6rem;margin-top:.9rem;flex-direction:column}
+  .fb-form.open{display:flex}
+  .fb-row{display:flex;gap:.6rem;flex-wrap:wrap}
+  textarea,input,select{font-family:var(--sans);font-size:.9rem;color:var(--ink);
+    background:var(--surface);border:1px solid var(--rule-hi);border-radius:4px;padding:.45rem .6rem}
+  textarea{width:100%;min-height:5rem;resize:vertical;line-height:1.5}
+  input{flex:1 1 12rem;min-width:0}
+  select{flex:0 0 auto}
+  .fb-list{list-style:none;margin:.9rem 0 0;padding:0;display:flex;flex-direction:column;gap:.7rem}
+  .fb-item{background:var(--sunk);border:1px solid var(--rule);border-radius:4px;
+           padding:.7rem .85rem}
+  .fb-item .who{font-size:.78rem;color:var(--faint);font-family:var(--mono);
+                display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.3rem}
+  .fb-item .body{font-size:.92rem;white-space:pre-wrap;overflow-wrap:break-word}
+  .fb-empty{font-size:.86rem;color:var(--faint);margin:.8rem 0 0}
+  .fb-status{font-size:.82rem;color:var(--faint);margin:.5rem 0 0}
+
+  .close{margin-top:3.5rem;border-top:1px solid var(--rule);padding-top:1.4rem;
+         font-size:.84rem;color:var(--faint);font-family:var(--mono);line-height:1.7}
+
+  @media (max-width:760px){
+    :root{--rail:0}
+    section{grid-template-columns:minmax(0,1fr);gap:0}
+    section>*{grid-column:1}
+    .eyebrow{grid-row:auto;position:static;margin-bottom:.8rem;padding-top:0}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="kicker">Budget proposal &middot; Partner training programme</p>
+    <h1>A self-service Xill4 sandbox for partner training</h1>
+    <p class="standfirst">Give every partner engineer their own Xill4 instance and their own practice data, and let the exercises mark themselves. Xill4 already ships as a Docker image, so this is cheaper than it sounds.</p>
+    <div class="meta">
+      <span>PREPARED BY KAMIL BEELI DE BELFORT</span>
+      <span>DECISION REQUESTED: BUDGET APPROVAL</span>
+      <span>STATUS: PHASE 0 COMPLETE</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">The ask</p>
+    <h2>Approve a phased budget, released one phase at a time</h2>
+
+    <div class="ask">
+      <h3>What is being requested</h3>
+      <p>Approval to build a multi-tenant Xill4 training sandbox in <strong>four phases</strong>, with funds released per phase and a go/no-go at each boundary.</p>
+      <p>Phase&nbsp;0 is already complete at no cost. <strong>Phase&nbsp;1 is the only immediate spend</strong> &mdash; a working single-trainee sandbox and a pilot &mdash; and it produces the measurements that make Phase&nbsp;2's cost exact rather than estimated.</p>
+    </div>
+
+    <p style="margin-top:1.5rem">The recurring cost this replaces is <strong>24 to 40 hours of senior consultant time per cohort</strong> &mdash; three to five working days &mdash; spent supervising trainees, answering the same questions, and marking migrations by hand, including the practical exam.</p>
+    <p>That is not an occasional cost. One trainer alone delivered <strong>six cohorts in the first nine months of 2026</strong>, and there are two more active partner trainers, with a fourth currently being trained.</p>
+
+    <div class="scroller full">
+      <table>
+        <thead><tr><th></th><th>Cohorts a year</th><th>Senior hours</th><th>Working weeks</th><th>At &euro;800 a day</th></tr></thead>
+        <tbody>
+          <tr class="lean">
+            <td><strong>Today</strong>, three trainers, conservatively</td>
+            <td class="num">15</td>
+            <td class="num">360 &ndash; 600</td>
+            <td class="num">9 &ndash; 15</td>
+            <td class="num">&euro;36,000 &ndash; 60,000</td>
+          </tr>
+          <tr>
+            <td>With the fourth trainer, at the same rate</td>
+            <td class="num">20</td>
+            <td class="num">480 &ndash; 800</td>
+            <td class="num">12 &ndash; 20</td>
+            <td class="num">&euro;48,000 &ndash; 80,000</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">Fifteen cohorts is a deliberate floor: it assumes the two other trainers each deliver fewer than the six one trainer has already delivered in 2026. Senior time is costed at &euro;800 a day, or &euro;100 an hour.</p>
+    </div>
+
+    <p style="margin-top:1.5rem">For scale: at roughly <strong>&euro;10,000 to deliver one partner training</strong>, fifteen cohorts is about <strong>&euro;150,000 a year</strong> of programme cost &mdash; of which supervising and marking is <strong>a quarter to two-fifths</strong>. That is the portion this proposal addresses.</p>
+
+    <p style="margin-top:1.5rem">Note what the fourth trainer represents: the current way to deliver more training is to train more trainers. <strong>This proposal is the alternative to that</strong> &mdash; capacity that grows without adding senior headcount, and delivery that stays identical whoever is running the cohort.</p>
+    <p>The strategic case is ramp-up. Partner engineers currently take <strong>more than two months</strong> to become genuinely project-ready; the target is <strong>four weeks</strong>. Every week earlier a partner becomes productive is a week Xillio is not absorbing work the partner was contracted to do.</p>
+
+    <div class="fb" data-section="ask" data-title="The ask"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The problem</p>
+    <h2>Three costs, all of them recurring</h2>
+
+    <h3>Senior time spent watching and marking</h3>
+    <p>A trainer sits with a cohort, answers the same questions, then reviews each trainee's migration by hand to judge whether it is correct &mdash; the practical exam included. Between 24 and 40 hours per cohort, across at least fifteen cohorts a year and three trainers.</p>
+    <p>It consumes exactly the people who are most valuable on client work, and the only way it currently scales is by training another trainer &mdash; which is itself senior time, and introduces a second source of judgement about what counts as a correct migration.</p>
+
+    <h3>Trainees cannot practise at the same time</h3>
+    <p>Partner training servers take one or two logins, and concurrent work on a single Xill4 instance is not advisable &mdash; trainees interfere with each other. So people queue, or they watch instead of doing. Hands-on practice is the entire point of the training, and it is the thing the current setup rations.</p>
+
+    <h3>Ramp-up takes more than two months</h3>
+    <p>Competence at the end of training is already assessed: there is a practical Xill4 exam in which an engineer performs a simple test migration. The gap is not assessment &mdash; it is everything before it. Practice is rationed, feedback arrives days after the work, and the exam is a single gate at the end rather than a signal a trainee can act on while learning. Someone also has to mark it by hand.</p>
+    <p>The sandbox does not replace that exam. It feeds it, by giving trainees unlimited graded practice beforehand &mdash; and the exam itself becomes one more scenario, marked automatically like the rest.</p>
+
+    <div class="fb" data-section="problem" data-title="The problem"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">End goal</p>
+    <h2>What partner training looks like when this exists</h2>
+    <p class="lede">A partner engineer opens a browser, signs in, and gets their own Xill4 instance with their own copy of a realistic messy dataset. They read the brief, build the migration in Xill4, and press <em>Check my work</em>. Seconds later they see a score, which tasks passed, and exactly which values were wrong.</p>
+    <p>They fix and re-check as often as they like. When they pass, the next scenario unlocks. The trainer never marks anything by hand, and sees a dashboard of who has passed what, how many attempts it took, and which exercise the cohort is getting stuck on &mdash; which is the signal that says the <em>material</em> needs work, not the trainee.</p>
+    <p>Because each trainee's practice data is generated from their own identity, no two trainees have the same answer, and an answer passed between them scores nothing.</p>
+    <p>Ideally the partner also <strong>picks the systems they want to practise against</strong> &mdash; a file share into SharePoint Online, OpenText Content Server into SharePoint, and so on &mdash; so the practice matches the migration they have actually been contracted to deliver. The section below sets out how that works and what each system costs to add.</p>
+
+    <div class="fb" data-section="goal" data-title="End goal"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Why now</p>
+    <h2>Xill4 ships as a Docker image, which is what makes this affordable</h2>
+    <p>This was the open question that decided whether the idea was cheap or expensive, and the answer is favourable. Xill4 publishes an official container image, exposes a single port, and is configured entirely through environment variables &mdash; a licence key, a MongoDB connection string, and an environment secret.</p>
+    <p>That means a trainee's sandbox is a container, not a virtual machine. A dozen of them share one host, each pointed at its own database on one shared MongoDB, and one can be reset in seconds rather than redeployed in minutes.</p>
+
+    <figure class="full">
+      <svg viewBox="0 0 880 336" role="img" aria-label="One Azure Linux virtual machine hosts twelve Xill4 containers, one per trainee, all sharing a single MongoDB instance in which each trainee has their own database. Thirty to sixty trainees a year therefore does not require thirty to sixty servers.">
+        <defs>
+          <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" fill="currentColor">
+          <text x="16" y="40" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">ONE AZURE LINUX VM &middot; SHUT DOWN OUTSIDE TRAINING HOURS</text>
+          <rect x="16" y="52" width="504" height="252" rx="5" fill="none" stroke="var(--rule-hi)" stroke-width="1.25" stroke-dasharray="3 3"/>
+
+          <rect x="40" y="80" width="108" height="56" rx="3" fill="var(--surface)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="54" y="104" font-size="11.5" font-family="IBM Plex Mono, monospace" font-weight="500" fill="var(--accent)">xill4</text>
+          <text x="54" y="121" font-size="10" fill="var(--muted)">trainee A</text>
+
+          <rect x="158" y="80" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <text x="172" y="104" font-size="11.5" font-family="IBM Plex Mono, monospace">xill4</text>
+          <text x="172" y="121" font-size="10" fill="var(--muted)">trainee B</text>
+
+          <rect x="276" y="80" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <text x="290" y="104" font-size="11.5" font-family="IBM Plex Mono, monospace">xill4</text>
+          <text x="290" y="121" font-size="10" fill="var(--muted)">trainee C</text>
+
+          <rect x="394" y="80" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <text x="408" y="104" font-size="11.5" font-family="IBM Plex Mono, monospace">xill4</text>
+          <text x="408" y="121" font-size="10" fill="var(--muted)">trainee D</text>
+
+          <rect x="40" y="146" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <rect x="158" y="146" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <rect x="276" y="146" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <rect x="394" y="146" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <rect x="40" y="212" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <rect x="158" y="212" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <rect x="276" y="212" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+          <rect x="394" y="212" width="108" height="56" rx="3" fill="var(--sunk)" stroke="var(--rule-hi)"/>
+
+          <text x="268" y="292" text-anchor="middle" font-size="10.5" font-family="IBM Plex Mono, monospace" fill="var(--muted)">~12 SANDBOXES PER HOST</text>
+
+          <path d="M 520 132 L 560 132 L 560 168 L 596 168" fill="none" stroke="currentColor" stroke-width="1.25" marker-end="url(#a)"/>
+          <path d="M 520 178 L 596 178" fill="none" stroke="currentColor" stroke-width="1.25" marker-end="url(#a)"/>
+          <path d="M 520 224 L 560 224 L 560 188 L 596 188" fill="none" stroke="currentColor" stroke-width="1.25" marker-end="url(#a)"/>
+
+          <rect x="600" y="136" width="264" height="84" rx="5" fill="var(--surface)" stroke="currentColor" stroke-width="1.5"/>
+          <text x="732" y="168" text-anchor="middle" font-size="13" font-weight="600">MongoDB</text>
+          <text x="732" y="188" text-anchor="middle" font-size="10.5" fill="var(--muted)">one database per trainee</text>
+          <text x="732" y="205" text-anchor="middle" font-size="10.5" fill="var(--muted)">holds each trainee's projects and flows</text>
+        </g>
+      </svg>
+      <figcaption>Thirty to sixty trainees a year does not mean thirty to sixty servers. Because the Docker image keeps projects and flows in MongoDB rather than on disk, one shared database server serves the whole cohort, with a separate database per trainee.</figcaption>
+    </figure>
+
+    <div class="fb" data-section="why-now" data-title="Why now"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Systems</p>
+    <h2>Which systems trainees practise against, and how partners choose</h2>
+    <p class="lede">The sandbox is a real Xill4 instance, so it can do anything Xill4 can do: crawl a file share, load into SharePoint Online through the Migration API, extract from OpenText Content Server. What differs between systems is not whether it works, but what each one costs to isolate per trainee.</p>
+
+    <h3>One asymmetry keeps this affordable</h3>
+    <p>A source is <em>read</em>; a target is <em>written</em>. So a whole cohort can share one source system read-only, while every trainee needs their own target space. Twelve trainees extracting from the same OpenText instance do not interfere with each other. Twelve trainees writing into the same SharePoint site absolutely would.</p>
+
+    <div class="scroller full">
+      <table>
+        <thead>
+          <tr><th>System</th><th>Role</th><th>How each trainee is isolated</th><th>Effort to add</th></tr>
+        </thead>
+        <tbody>
+          <tr class="lean">
+            <td><strong>File share</strong> (local or network)</td>
+            <td>Source or target</td>
+            <td>A folder mounted into that trainee's container</td>
+            <td>None &mdash; working today</td>
+          </tr>
+          <tr>
+            <td><strong>Object storage</strong> (S3-compatible stand-in)</td>
+            <td>Target</td>
+            <td>A bucket or key prefix per trainee</td>
+            <td>Small</td>
+          </tr>
+          <tr>
+            <td><strong>SharePoint Online</strong> via Migration API</td>
+            <td>Target</td>
+            <td>A folder per trainee inside one shared target site, which is the cheapest workable option &mdash; see below</td>
+            <td>Medium &mdash; needs an app registration, outbound access, and patience with queued migration jobs</td>
+          </tr>
+          <tr>
+            <td><strong>OpenText Content Server</strong></td>
+            <td>Source</td>
+            <td>Not needed &mdash; one instance, read-only, shared by the cohort</td>
+            <td>Depends entirely on having a licensed instance available to point at</td>
+          </tr>
+          <tr>
+            <td><strong>Other repositories</strong></td>
+            <td>Usually source</td>
+            <td>Same shared read-only pattern</td>
+            <td>One adapter each, reusable everywhere</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">Connector entitlements under the training licence should be confirmed before promising a specific system to partners.</p>
+    </div>
+
+    <h3>One shared target site, a folder per trainee</h3>
+    <p>The cheapest way to give thirty trainees a SharePoint Online target is not thirty site collections. It is <strong>one target site with a folder per trainee</strong>: nothing to provision per person, one place to configure, and a reset is deleting the contents of one folder.</p>
+    <p>The obvious objection is that trainees can see each other's folders and copy the answer. That objection is already answered by the way practice data is generated: <strong>each trainee's source data is different</strong>, so a migration copied from a colleague's folder scores zero. Visibility stops being a threat. Where discretion still matters, SharePoint can give a folder unique permissions, which is reasonable at cohort scale.</p>
+    <p>The one thing worth measuring rather than assuming is concurrency. Throttling limits apply at tenant and site level, so a dozen simultaneous migrations into a single site may throttle where the same load spread across several sites would not. Start with one site and folders; split into separate libraries or sites only if measurement says to. Phase 1 is where that gets measured.</p>
+
+    <h3>How partners get to choose: adapters, not more exercises</h3>
+    <p>Offering a menu of source and target combinations sounds like it multiplies the work &mdash; five sources times five targets would be twenty-five exercises to write and mark. It does not, because an exercise's <em>learning objective</em> is separable from the systems it runs against. &ldquo;Normalise inconsistent metadata and load it without losing records&rdquo; is the same lesson whether the target is a file share or SharePoint.</p>
+    <p>So each system needs one <strong>adapter</strong>, built once: something that creates a trainee's own space in it, seeds it if it is a source, and checks what landed in it if it is a target. Every existing exercise then works against every adapter. Adding SharePoint Online as a target makes it available to the whole curriculum, not to one exercise.</p>
+    <p>That turns the menu into a realistic sequence: start with file share and object storage, which are instant and free; add SharePoint Online next, because it is what partners overwhelmingly migrate <em>into</em>; add legacy sources like OpenText as the licensed instances and the demand appear.</p>
+
+    <h3>Two honest limits</h3>
+    <p>A real cloud target is slower and less predictable than a stand-in, and the consequence lands on the trainee. A SharePoint Online migration job is submitted, queued and completed asynchronously: if the grader checks the moment the trainee presses the button, it can see half the documents and report a correct migration as incomplete. If five trainees push at once and the service throttles, the same thing happens more often. If Microsoft has a bad afternoon, nobody in the cohort can pass.</p>
+    <p>So a real target obliges the grader to poll rather than assert, to distinguish &ldquo;not finished yet&rdquo; from &ldquo;finished wrongly&rdquo;, and to tell a trainee plainly when a failure was the platform's rather than theirs. All solvable, none free &mdash; whereas a local file share or object-storage stand-in answers instantly and identically every single time.</p>
+    <p>And a licensed legacy source has to exist somewhere to be shared. If Xillio has an OpenText instance for internal testing, pointing the cohort at it read-only is straightforward; if not, that becomes a cost line of its own and the alternative is practising on a pre-extracted dataset, which teaches transformation and loading but not extraction.</p>
+
+    <div class="fb" data-section="systems" data-title="Systems"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Evidence</p>
+    <h2>The hard part is already built and proven</h2>
+    <p class="lede">Automatic marking is where projects like this usually fail. It has therefore been built first, before any spend, and it works.</p>
+    <p>A complete exercise exists today: a legacy client file share with a hand-maintained metadata export containing three date formats, an uncontrolled department column, records pointing at files that are absent, and files nobody documented. The trainee must normalise it, load it into a target structure, and report what could not be migrated.</p>
+    <p>The marking engine scores that work automatically, out of 100, and names the specific values that are wrong &mdash; for example <code>expected 2016-04-03, actual 04/03/2019</code>. It marks the outcome, never the method, so there is more than one valid way to solve an exercise.</p>
+
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Verified</th><th>How</th></tr></thead>
+        <tbody>
+          <tr><td>A correct migration scores 100/100</td><td class="num">automated, every commit</td></tr>
+          <tr><td>Untouched work scores 0/100</td><td class="num">automated, every commit</td></tr>
+          <tr><td>One wrong value costs only its own task</td><td class="num">automated, every commit</td></tr>
+          <tr><td>Two trainees never get the same data</td><td class="num">automated, every commit</td></tr>
+          <tr><td>Runs on Windows and Linux</td><td class="num">45 tests, both platforms</td></tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">Running it on a real Windows machine found two genuine defects that Linux testing had missed. Both are fixed, and Windows is now part of the automated checks.</p>
+    </div>
+
+    <div class="fb" data-section="evidence" data-title="Evidence"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Phases</p>
+    <h2>Four phases, each with a decision point</h2>
+
+    <div class="phases">
+      <div class="phase done">
+        <div class="n">Phase 0 &check;</div>
+        <div>
+          <h4>Prove that exercises can mark themselves</h4>
+          <p>Complete. The marking engine and one full exercise, verified on both platforms.</p>
+          <dl>
+            <dt>Cost</dt><dd>None. Already done.</dd>
+            <dt>Proves</dt><dd>The concept works before any money is committed.</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">Phase 1</div>
+        <div>
+          <h4>One real sandbox, and a pilot</h4>
+          <p>Stand up the Xill4 container with its database and seeded data, provisioned by script. Then have a colleague complete the exercise in real Xill4 and mark it automatically.</p>
+          <dl>
+            <dt>Needs</dt><dd>Cloudsmith entitlement token, a training licence key, a host to run on, a few days of engineering</dd>
+            <dt>Delivers</dt><dd>A working sandbox for one trainee, and measured resource usage per instance</dd>
+            <dt>Proves</dt><dd>That real Xill4 work marks cleanly &mdash; and turns Phase 2's cost from an estimate into a calculation</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">Phase 2</div>
+        <div>
+          <h4>Cohort-ready</h4>
+          <p>Provisioning for a full cohort, sign-in for partner trainees, the <em>Check my work</em> button, and a trainer dashboard over the recorded results. Sandboxes persist across a multi-day course.</p>
+          <dl>
+            <dt>Needs</dt><dd>Host sized for a cohort, sign-in configuration for external users, engineering time</dd>
+            <dt>Delivers</dt><dd>The first cohort trained on the sandbox instead of shared servers</dd>
+            <dt>Proves</dt><dd>Trainer time per cohort actually falls</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="n">Phase 3</div>
+        <div>
+          <h4>Full curriculum and self-service</h4>
+          <p>Port the existing exercises into scenarios, add progression so harder scenarios unlock as trainees pass, and add a final assessment that proves competence rather than participation.</p>
+          <dl>
+            <dt>Needs</dt><dd>Time from whoever owns the training material; roughly a day or two per exercise</dd>
+            <dt>Delivers</dt><dd>Continuous partner enrolment without a trainer in the room</dd>
+            <dt>Proves</dt><dd>Ramp-up measured in weeks, with evidence per engineer</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="fb" data-section="phases" data-title="Phases"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Cost</p>
+    <h2>What it costs, and when it pays back</h2>
+    <p class="lede">The build is a one-off; the saving recurs every cohort. At the current cohort volume the arithmetic closes inside the first year.</p>
+
+    <h3>One-off build</h3>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Phase</th><th>Effort</th><th>At &euro;800 a day</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Phase 1</strong> &mdash; one sandbox, plus the pilot</td><td class="num">5 &ndash; 8 days</td><td class="num">&euro;4,000 &ndash; 6,400</td></tr>
+          <tr><td><strong>Phase 2</strong> &mdash; cohort-ready: provisioning, sign-in, trainer dashboard</td><td class="num">15 &ndash; 25 days</td><td class="num">&euro;12,000 &ndash; 20,000</td></tr>
+          <tr class="lean"><td><strong>Total to a cohort-ready sandbox</strong></td><td class="num">20 &ndash; 33 days</td><td class="num">&euro;16,000 &ndash; 26,400</td></tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">Effort is estimated from what Phase 0 actually took. Phase 1 exists in part to replace the Phase 2 estimate with a measurement, which is why the recommendation is to release the two figures separately.</p>
+    </div>
+
+    <h3>Recurring</h3>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Item</th><th>Cost</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Azure host for a cohort</td><td class="num">low hundreds &euro; / month</td><td>Indicative, and roughly a quarter of that if shut down outside training hours. Confirm at Xillio's own rates.</td></tr>
+          <tr><td>Each new exercise</td><td class="num">&euro;800 &ndash; 1,600</td><td>One to two days to write its data generator and marking rules. Reusable across every partner, forever.</td></tr>
+          <tr><td>Each new system adapter</td><td class="num">to be scoped</td><td>Built once, then available to every exercise. SharePoint Online is the one worth doing first.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Payback</h3>
+    <p>The addressable cost today is <strong>&euro;36,000 to &euro;60,000 a year</strong>. The sandbox does not remove all of it &mdash; a trainer still runs the cohort and still answers questions. What goes to essentially zero is <em>marking</em>, and what falls is <em>supervision</em>, because trainees get an answer in seconds instead of queuing for the only person who can give them one.</p>
+    <p>Assume conservatively that <strong>half</strong> is recovered: <strong>&euro;18,000 to &euro;30,000 a year</strong>, against a one-off build of &euro;16,000 to &euro;26,400. That pays back <strong>within the first year</strong>, and from the second year on it is recovery rather than investment.</p>
+    <p>Two things improve that arithmetic and are not counted in it. The fourth trainer's cohorts add to the saving instead of adding cost. And partners reaching project-readiness in four weeks instead of two months is worth considerably more than the marking hours &mdash; it is simply harder to put a defensible number on, so it has been left out.</p>
+
+    <div class="fb" data-section="cost" data-title="Cost and payback"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Where it runs</p>
+    <h2>Three hosting options</h2>
+    <p>The build is identical in all three. What differs is who pays, how visible the cost is, and how fast we can start.</p>
+
+    <div class="scroller full">
+      <table>
+        <thead>
+          <tr><th>Option</th><th>Cost</th><th>Setup needed</th><th>Trade-off</th></tr>
+        </thead>
+        <tbody>
+          <tr class="lean">
+            <td><strong>Existing Azure subscription</strong><br><span class="chip ok">Recommended</span></td>
+            <td>Incremental compute on a bill we already pay. One host per cohort, shut down outside training hours.</td>
+            <td>A resource group, contributor rights, somewhere to keep the licence key and registry token as secrets.</td>
+            <td>Fastest to start and no procurement. Training spend is mixed in with everything else.</td>
+          </tr>
+          <tr>
+            <td><strong>New Azure subscription for training</strong></td>
+            <td>The same compute, plus a little administrative overhead.</td>
+            <td>Finance or procurement to create the subscription, then as above.</td>
+            <td>Clean cost attribution &mdash; useful precisely because this is a budget request someone will want to track. Slower to begin.</td>
+          </tr>
+          <tr>
+            <td><strong>Existing Xillio infrastructure</strong></td>
+            <td>Potentially close to nothing, if there is genuine headroom.</td>
+            <td>Spare capacity on those hosts, Docker available, and a named owner for the box.</td>
+            <td>Cheapest, but couples training to infrastructure we do not want to disturb, and if capacity is tight the queueing problem simply returns in a new form.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">Exact figures need pricing at Xillio's own Azure rates, and Phase 1 will measure what one Xill4 container actually consumes. The point of the table is the shape: one host per cohort, not one machine per trainee, and switched off when nobody is training.</p>
+    </div>
+
+    <div class="fb" data-section="hosting" data-title="Where it runs"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Requirements</p>
+    <h2>What is needed, and from whom</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Requirement</th><th>From</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Cloudsmith entitlement token to pull the Xill4 image</td><td>Whoever manages Xill4 releases</td><td><span class="chip tbc">To arrange</span></td></tr>
+          <tr><td>Training licence keys for the sandbox instances</td><td>Licence owner</td><td><span class="chip ok">Expected fine</span></td></tr>
+          <tr><td>A host to run containers on</td><td>Decision above</td><td><span class="chip tbc">To decide</span></td></tr>
+          <tr><td>Sign-in for external partner trainees</td><td>IT</td><td><span class="chip tbc">Phase 2</span></td></tr>
+          <tr><td>Engineering time to build phases 1 and 2</td><td>This budget</td><td><span class="chip tbc">Requested</span></td></tr>
+          <tr><td>Existing exercises to convert into scenarios</td><td>Training material owner</td><td><span class="chip tbc">Phase 3</span></td></tr>
+        </tbody>
+      </table>
+      <p class="tbl-note">On licensing: the training licence caps users per licence, not the number of licences. For a sandbox used only by trainees during training, this is not expected to constrain us &mdash; worth confirming in writing before Phase 2.</p>
+    </div>
+
+    <div class="fb" data-section="requirements" data-title="Requirements"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Risks</p>
+    <h2>What could go wrong, and what it would cost</h2>
+
+    <div class="risk">
+      <h4>One Xill4 container turns out to be resource-hungry</h4>
+      <p>Fewer sandboxes fit per host, so Phase 2's hosting cost rises. This is precisely what Phase 1 measures, before the larger commitment is made.</p>
+    </div>
+    <div class="risk">
+      <h4>Writing exercises is the real ongoing cost, not infrastructure</h4>
+      <p>Each scenario needs its data generator and its marking rules &mdash; a day or two of skilled time. Infrastructure is cheap; curriculum is the investment. Better to plan for it than to discover it.</p>
+    </div>
+    <div class="risk">
+      <h4>Trainee work lives in MongoDB, not on disk</h4>
+      <p>The container image stores projects and flows in the database. Resetting or preserving a trainee's work is therefore a database operation, which needs designing properly in Phase 1 rather than assumed.</p>
+    </div>
+    <div class="risk">
+      <h4>Exercises that pass but teach the wrong thing</h4>
+      <p>A marking scheme can be technically correct and pedagogically wrong. The pilot exists to catch that with a real person, and every exercise ships with checks proving it both passes correct work and fails incorrect work.</p>
+    </div>
+
+    <div class="risk">
+      <h4>Real systems can fail a trainee who did everything right</h4>
+      <p>Migrations into a live service complete asynchronously and throttle under concurrent load, so a grader that checks too early sees an incomplete result and marks correct work as wrong. Nothing erodes trust in automated marking faster. The mitigation is to use deterministic stand-ins for the exercises that teach technique, keep real services for the exercises where a real service's friction is itself the lesson, and make the grader wait and retry rather than assert.</p>
+    </div>
+
+    <h3>Alternatives considered</h3>
+    <p>Commercial hands-on training platforms exist that provide sandboxes and automated challenge checks. They would remove the provisioning and dashboard work, but we would still write every exercise and every marking rule ourselves &mdash; the part only Xillio can do &mdash; and we would take on a recurring licence fee and a dependency on their support for a container-based product. Given that Xill4 already ships as a Docker image, building is the cheaper and more controllable route. Worth revisiting if Phase 2 proves harder than expected.</p>
+
+    <div class="fb" data-section="risks" data-title="Risks and alternatives"></div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Decision</p>
+    <h2>What approval unlocks immediately</h2>
+    <p>With Phase 1 approved, work starts the same week: pull the image, stand up one sandbox with its database, seed it, and put a colleague through the existing exercise in real Xill4. That produces three things a decision on Phase 2 needs &mdash; a working sandbox, measured cost per trainee, and a real person's verdict on whether the marking is fair.</p>
+    <p>The recommendation is to approve Phases&nbsp;1 and&nbsp;2 with a ceiling, release Phase&nbsp;1 now, and hold Phase&nbsp;2 until Phase&nbsp;1 reports.</p>
+
+    <div class="fb" data-section="decision" data-title="Decision"></div>
+  </section>
+
+  <p class="close">
+    Key users: please leave your comments in the boxes on each section rather than by email &mdash; everyone reviewing this sees them, and they are folded into the next revision.<br>
+    <span id="fb-global-status"></span>
+  </p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STANCES = ["Comment", "Support", "Support with changes", "Concern"];
+  var NAME_KEY = "xill4-case-author";
+  var db = null;
+  var blocks = [];
+
+  function remembered() {
+    try { return window.localStorage.getItem(NAME_KEY) || ""; } catch (e) { return ""; }
+  }
+  function remember(name) {
+    try { window.localStorage.setItem(NAME_KEY, name); } catch (e) { /* private mode */ }
+  }
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function build(container) {
+    var section = container.getAttribute("data-section");
+    var title = container.getAttribute("data-title") || section;
+
+    var head = el("div", "fb-head");
+    head.appendChild(el("span", "fb-label", "Feedback on “" + title + "”"));
+    var toggle = el("button", null, "Add feedback");
+    toggle.type = "button";
+    toggle.disabled = true;
+    head.appendChild(toggle);
+    container.appendChild(head);
+
+    var list = el("ul", "fb-list");
+    container.appendChild(list);
+    var empty = el("p", "fb-empty", "Loading feedback…");
+    container.appendChild(empty);
+
+    var form = el("form", "fb-form");
+    var body = el("textarea");
+    body.placeholder = "What would you change, add, or challenge?";
+    body.required = true;
+    form.appendChild(body);
+
+    var row = el("div", "fb-row");
+    var name = el("input");
+    name.placeholder = "Your name";
+    name.value = remembered();
+    name.required = true;
+    row.appendChild(name);
+    var stance = el("select");
+    STANCES.forEach(function (option) {
+      var opt = el("option", null, option);
+      opt.value = option;
+      stance.appendChild(opt);
+    });
+    row.appendChild(stance);
+    var submit = el("button", "primary", "Post");
+    submit.type = "submit";
+    row.appendChild(submit);
+    form.appendChild(row);
+
+    var status = el("p", "fb-status");
+    form.appendChild(status);
+    container.appendChild(form);
+
+    toggle.addEventListener("click", function () {
+      form.classList.toggle("open");
+      if (form.classList.contains("open")) body.focus();
+    });
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      if (!db) return;
+      var text = body.value.trim();
+      var who = name.value.trim();
+      if (!text || !who) return;
+      submit.disabled = true;
+      status.textContent = "Posting…";
+      remember(who);
+      db.collection("feedback").add({
+        section: section,
+        author: who,
+        stance: stance.value,
+        body: text,
+        createdAt: new Date().toISOString()
+      }).then(function () {
+        body.value = "";
+        status.textContent = "";
+        form.classList.remove("open");
+      })["catch"](function (error) {
+        status.textContent = error && error.code === "not_granted"
+          ? "Feedback is not available in this view."
+          : "Could not post that — please try again.";
+      }).then(function () { submit.disabled = false; });
+    });
+
+    return { section: section, list: list, empty: empty, toggle: toggle };
+  }
+
+  document.querySelectorAll(".fb").forEach(function (container) {
+    blocks.push(build(container));
+  });
+
+  function render(snapshot) {
+    var bySection = {};
+    snapshot.docs.forEach(function (doc) {
+      var row = doc.data() || {};
+      var key = typeof row.section === "string" ? row.section : "";
+      (bySection[key] = bySection[key] || []).push(row);
+    });
+
+    blocks.forEach(function (block) {
+      var rows = bySection[block.section] || [];
+      block.list.textContent = "";
+      rows.forEach(function (row) {
+        var item = el("li", "fb-item");
+        var who = el("div", "who");
+        who.appendChild(el("span", null, String(row.author || "Anonymous")));
+        if (row.stance && row.stance !== "Comment") {
+          who.appendChild(el("span", "chip ok", String(row.stance)));
+        }
+        if (typeof row.createdAt === "string") {
+          who.appendChild(el("span", null, row.createdAt.slice(0, 10)));
+        }
+        item.appendChild(who);
+        item.appendChild(el("div", "body", String(row.body || "")));
+        block.list.appendChild(item);
+      });
+      block.empty.textContent = rows.length ? "" : "No feedback on this section yet.";
+      block.empty.hidden = rows.length > 0;
+    });
+  }
+
+  function unavailable(message) {
+    blocks.forEach(function (block) {
+      block.toggle.disabled = true;
+      block.empty.textContent = message;
+      block.empty.hidden = false;
+    });
+  }
+
+  if (!window.claude || typeof window.claude.use !== "function") {
+    unavailable("Feedback is only available on the published page.");
+    return;
+  }
+
+  window.claude.use("db").then(function (store) {
+    if (!store) {
+      unavailable("Feedback is not available in this view.");
+      document.getElementById("fb-global-status").textContent =
+        "Feedback could not load here — open the published link while signed in.";
+      return;
+    }
+    db = store;
+    blocks.forEach(function (block) { block.toggle.disabled = false; });
+    db.collection("feedback").orderBy("createdAt").onSnapshot(render, function (error) {
+      unavailable(error && error.code === "revoked"
+        ? "Feedback access ended for this session — reload the page."
+        : "Feedback could not load — reload the page.");
+    });
+  })["catch"](function () {
+    unavailable("Feedback could not load — reload the page.");
+  });
+})();
+</script>
