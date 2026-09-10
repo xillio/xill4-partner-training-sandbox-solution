@@ -4,7 +4,11 @@ __pycache__/
 .ruff_cache/
 .venv/
 .workspaces/
-workspace/.env
+.backups/
+preflight-report.json
+measurement.json
+workspace/.env*
+!workspace/.env.*.example
 
 # Generated artifacts. Text worth reviewing is tracked; binaries and previews
 # are not. A directory cannot be re-included once excluded, so the contents are

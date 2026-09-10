@@ -45,7 +45,9 @@ jobs:
           python-version: "3.12"
       - run: pip install PyYAML
       - name: Provision a workspace the way the control plane does
-        run: ./workspace/provision.sh ci-trainee 01-legacy-fileshare
+        # --no-db: this job grades a workspace and never starts a Xill4, so it does not
+        # need the shared MongoDB. The sandbox job below covers the database half.
+        run: ./workspace/provision.sh ci-trainee 01-legacy-fileshare --no-db
       - run: make solve WORKSPACE=.workspaces/ci-trainee/01-legacy-fileshare
       - run: make grade WORKSPACE=.workspaces/ci-trainee/01-legacy-fileshare
       - uses: actions/upload-artifact@v4
@@ -53,3 +55,27 @@ jobs:
         with:
           name: grading-report
           path: .workspaces/ci-trainee/01-legacy-fileshare/report.json
+
+  sandbox:
+    # The provisioning path, against a stand-in image rather than the private Xill4 one.
+    # It exists for a single assertion that must never regress: one trainee's database
+    # credentials cannot read another trainee's database. That property is one missing
+    # `--auth` away from silently inverting, and no unit test can see it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install PyYAML
+      - name: Build the stand-in image
+        run: docker build -t xill4-standin:dev workspace/standin
+      - name: Preflight against the stand-in
+        # Every check must pass, including mongo-isolation and the volume mounts. The
+        # real image is proven by running the same script on a host that can reach the
+        # registry: see workspace/preflight.py.
+        run: python workspace/preflight.py --image xill4-standin:dev --settle 5 --timeout 120
+      - name: Smoke-test the footprint sampler
+        # The shared MongoDB is still up from the preflight. Measuring a stand-in says
+        # nothing about Xill4's cost -- this only keeps the sampler from rotting.
+        run: python workspace/measure.py --seconds 5 --interval 5 --cohort 5

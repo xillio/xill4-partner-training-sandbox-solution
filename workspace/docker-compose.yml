@@ -1,5 +1,12 @@
-# One trainee's sandbox. Brought up once per trainee with a distinct project name and
-# port, by ./provision.sh.
+# One trainee's sandbox. Brought up once per trainee with a distinct project name, port
+# and database, by ./provision.sh:
+#
+#   docker compose --env-file .env.platform --env-file .env.alice up -d
+#
+# Two env files, not one: .env.platform holds what the whole cohort shares (image version,
+# licence key, the per-deployment environment secret), .env.<trainee> holds what is theirs
+# alone (port, database, credentials). A cohort-wide secret is then stored once rather
+# than copied into one file per trainee.
 #
 # The workspace directory on the host looks like this:
 #
@@ -9,48 +16,68 @@
 #
 # That last line is the whole isolation story for grading: the answer key lives on the
 # host beside the workspace and is never reachable from inside the trainee's instance.
+#
+# The trainee's *other* half -- the projects and flows they build -- lives in their own
+# database in the shared MongoDB, not on this filesystem. Resetting a sandbox therefore
+# means reseeding the directory and dropping the database; provision.sh --reset does both.
 
 name: xill4-sbx-${TRAINEE:?set TRAINEE}
 
 services:
   xill4:
-    # TODO(blocked): confirm with Engineering whether Xill4 ships a Linux container image
-    # and whether the licence permits one short-lived instance per trainee. Until then this
-    # is a placeholder and workspaces are provisioned as VMs -- see docs/architecture.md.
-    image: ${XILL4_IMAGE:-ghcr.io/xillio/xill4:PLACEHOLDER}
+    image: ${XILL4_IMAGE_REPO:-docker.cloudsmith.io/xillio/xill4/xill4}:${XILL4_VERSION:?set XILL4_VERSION}
     container_name: xill4-sbx-${TRAINEE}-engine
     restart: unless-stopped
+    # `default` is this trainee's own network and carries their MinIO and grader;
+    # `sandbox` is the shared one and exists so this container can resolve `mongo`.
+    # Keeping the two apart is what stops one trainee's stack resolving another's
+    # service names -- both would otherwise be aliased `minio` on one network.
+    networks: [default, sandbox]
     ports:
-      - "${XILL4_PORT:?set XILL4_PORT}:8080"
+      - "${XILL4_PORT:?set XILL4_PORT}:8000"
     volumes:
       - ../${WORKSPACE_DIR:?set WORKSPACE_DIR}/source:/data/source:ro
       - ../${WORKSPACE_DIR}/target:/data/target
       - xill4-home:/home/xill4
     environment:
-      XILL4_LICENCE: ${XILL4_LICENCE:-}
+      # Names as the image documents them. Phase 0 guessed `XILL4_LICENCE`, which the
+      # image ignores -- a guessed variable name fails as a licensing error much later.
+      XILL4_LICENSE_KEY: ${XILL4_LICENSE_KEY:?set XILL4_LICENSE_KEY in .env.platform}
+      # Per-deployment, not per-trainee: one value for the whole cohort, generated once
+      # into .env.platform. Rotating it is a deployment-wide action.
+      XILL4_ENVIRONMENT_SECRET: ${XILL4_ENVIRONMENT_SECRET:?set XILL4_ENVIRONMENT_SECRET in .env.platform}
+      # Scoped to this trainee's database, with this trainee's credentials. The trainee can
+      # read this string from inside their own container; it is worth nothing anywhere else.
+      XILL4_DATABASE_CONNECTION_STRING: ${XILL4_DATABASE_CONNECTION_STRING:?set XILL4_DATABASE_CONNECTION_STRING}
       TRAINEE: ${TRAINEE}
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
+      # The path is a guess until an instance has actually run: workspace/preflight.py
+      # probes the candidates and reports which one answers. Nothing depends_on this
+      # condition, so a wrong guess shows as "unhealthy" and breaks nothing.
+      test: ["CMD-SHELL",
+             "curl -fsS http://localhost:8000${XILL4_HEALTH_PATH:-/} >/dev/null 2>&1 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
+      start_period: 60s
 
   # Stand-in for a cloud target system. Scenarios that migrate into object storage use
   # this instead of a real tenant, so grading stays deterministic and free.
   minio:
-    image: minio/minio:RELEASE.2024-09-13T20-26-02Z
+    image: ${MINIO_IMAGE:-minio/minio:RELEASE.2024-09-13T20-26-02Z}
     profiles: [objectstore]
     command: server /data --console-address ":9001"
     ports:
       - "${MINIO_PORT:-9000}:9000"
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-trainee}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-trainee-secret}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:?set S3_SECRET_KEY}
     volumes:
       - minio-data:/data
 
   # Run on demand: `docker compose run --rm grader`. The control plane invokes the same
-  # image behind the trainee's "Check my work" button.
+  # image behind the trainee's "Check my work" button. It mounts the workspace read-write
+  # nowhere and the answer key nowhere the trainee can reach -- it runs host-side.
   grader:
     build:
       context: ..
@@ -72,3 +99,12 @@ services:
 volumes:
   xill4-home:
   minio-data:
+
+networks:
+  # Per-trainee, created by compose under this project's name.
+  default:
+  # The shared network from docker-compose.platform.yml. `docker compose up` fails with a
+  # clear error if the platform stack has not been started, which is the right order.
+  sandbox:
+    name: xill4-sandbox
+    external: true

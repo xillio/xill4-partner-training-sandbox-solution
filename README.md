@@ -74,7 +74,7 @@ graded output yourself. `python demo.py --clean` removes them.
 ### Running the pieces separately
 
 ```
-python -m pytest                                          # 42 tests
+python -m pytest                                          # 58 tests
 python scenarios/01-legacy-fileshare/seedgen.py --workspace ws/alice --seed alice:01
 python scenarios/01-legacy-fileshare/solution/solve.py --workspace ws/alice
 python -m grader scenarios/01-legacy-fileshare --workspace ws/alice
@@ -88,21 +88,43 @@ when a workspace is laid out differently. On Windows, prefix the grader command 
 
 ## How one trainee's sandbox comes up
 
+Xill4 ships an official Linux image, so a trainee's sandbox is a container rather than a VM.
+It keeps its projects and flows in MongoDB, not on disk, so a trainee's state has two halves
+and both are provisioned — and reset — together.
+
 ```bash
-./workspace/provision.sh alice 01-legacy-fileshare   # seeds alice's own data, picks her port
-cd workspace && docker compose up -d                 # her Xill4 instance
+docker login docker.cloudsmith.io -u 'xillio/xill4'  # password: the entitlement token
+make platform-up                                     # the shared MongoDB, once per host
+./workspace/provision.sh alice 01-legacy-fileshare   # alice's data, database, port
+cd workspace && docker compose --env-file .env.platform --env-file .env.alice up -d
 make grade WORKSPACE=.workspaces/alice/01-legacy-fileshare
 ```
 
 Alice's Xill4 gets `source/` read-only and `target/` read-write. It does not get
 `.expected/` — the answer key derived from her seed, which only the grader can read. Her
 data is generated from `hash("alice", scenario)`, so it differs from every other trainee's
-and an answer copied from a colleague scores nothing.
+and an answer copied from a colleague scores nothing. Her flows live in `xill4_alice`, which
+her credentials — and only hers — can read.
 
-> The Xill4 image in `workspace/docker-compose.yml` is a placeholder. Whether Xill4 can run
-> as a container is the one blocking unknown — see
-> [docs/open-questions.md](docs/open-questions.md). Everything else here works regardless of
-> the answer; the VM fallback changes only the provisioner.
+`./workspace/provision.sh alice 01-legacy-fileshare --reset` starts her over: reseeded data
+*and* an empty database. Without `--reset` her flows survive, which is what you want between
+attempts.
+
+### Before the first cohort, on the host that will run it
+
+```
+make preflight        # writes preflight-report.json
+```
+
+One command that pulls the real image, starts one instance, and answers what the compose
+file still has to guess: which uid it runs as (and therefore whether it can write the
+mounted `target/`), which URL answers a healthcheck, whether the trainee's scoped database
+credentials really hold its state, and what one container costs. It provisions a throwaway
+trainee and removes it again. Everything it finds is in the report; the two values it asks
+you to copy into `.env.platform` are printed at the end.
+
+`make measure SECONDS=300` samples the running cohort and extrapolates — run it while
+trainees are working, because an idle container is the floor, not the cost.
 
 ## Layout
 
@@ -110,7 +132,7 @@ and an answer copied from a colleague scores nothing.
 | --- | --- |
 | `scenarios/` | One directory per exercise: tasks, brief, seed generator, reference solution |
 | `grader/` | The grading engine and its check plugins |
-| `workspace/` | Per-trainee stack: compose file, provisioning script, grader image |
+| `workspace/` | The stack: compose files, provisioning, preflight, measurement |
 | `docs/` | Architecture, scenario authoring, open questions |
 
 ## Documentation
@@ -126,6 +148,9 @@ and an answer copied from a colleague scores nothing.
 | Command | |
 | --- | --- |
 | `python demo.py` | prove the whole loop, on any OS, without make |
+| `make platform-up` | start the shared MongoDB the trainee instances need |
+| `make preflight` | prove one real Xill4 container works, and report what it costs |
+| `make measure` | sample what the running sandboxes consume |
 | `make test` | full suite, including the per-scenario grading invariants |
 | `make lint` | ruff |
 | `make grade WORKSPACE=…` | grade a workspace as the "Check my work" button does |

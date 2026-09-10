@@ -1,0 +1,55 @@
+# The shared half of the sandbox: one MongoDB for the whole cohort, brought up once per
+# host, with a database per trainee inside it.
+#
+#   docker compose --env-file .env.platform -f docker-compose.platform.yml up -d
+#
+# Why shared: the Xill4 image keeps projects and flows in Mongo rather than on disk, so
+# every trainee needs a database -- but not a database *server* each. One mongod with a
+# scoped user per database costs a fraction of N mongods and is the only piece of state
+# the sandbox has to back up.
+#
+# Isolation between trainees rests on two things, and both are load-bearing:
+#
+#   1. mongod runs with --auth. Creating a per-trainee user without it is theatre: with
+#      authentication off, credentials are accepted and then ignored, and any trainee's
+#      connection string reads every other trainee's flows. That is verified in
+#      workspace/preflight.py, which fails the run if a scoped user can read a database
+#      that is not its own.
+#   2. Each trainee's user is dbOwner on their own database only. They can list nothing
+#      else and read nothing else, and the connection string inside their container --
+#      which they can see -- is worth exactly their own sandbox.
+
+name: xill4-sbx-platform
+
+services:
+  mongo:
+    image: ${MONGO_IMAGE:-mongo:7.0}
+    container_name: xill4-sbx-mongo
+    # `--auth` is the whole isolation story; see above. The official entrypoint prepends
+    # `mongod` when the command starts with a flag.
+    command: ["--auth", "--bind_ip_all"]
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:?set MONGO_ROOT_USER in .env.platform}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env.platform}
+    ports:
+      # Loopback only. The cohort's entire state lives in here; it has no business being
+      # on a public interface. Trainee containers reach it over the compose network, not
+      # this mapping, which exists for provisioning and mongodump from the host.
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1}).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  mongo-data:
+
+networks:
+  default:
+    # Named, and joined by each trainee stack, so the trainee's Xill4 can resolve `mongo`.
+    name: xill4-sandbox

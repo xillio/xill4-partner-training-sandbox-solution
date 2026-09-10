@@ -38,15 +38,14 @@ mounted, and tell me how to reach it". Three implementations are plausible:
 
 | Backend | Fits when | Cost per trainee | Reset time | Status |
 | --- | --- | --- | --- | --- |
-| **VM per trainee** | Xill4 only installs onto a full OS (likely Windows) | One VM, always | Minutes (redeploy) | Works today, safe fallback |
-| **Container per trainee** | Xill4 can run headless on Linux | A slice of one host | Seconds | Target state |
+| **VM per trainee** | Xill4 only installs onto a full OS (likely Windows) | One VM, always | Minutes (redeploy) | Fallback, no longer needed |
+| **Container per trainee** | Xill4 can run headless on Linux | A slice of one host | Seconds | **Chosen** — the official image runs on Linux |
 | **Pooled desktop** | Trainees need the Xill IDE, not just the engine | AVD session host slice | Minutes | Only if the IDE is required |
 
-The recommendation is to **build against the container backend and keep the VM backend as
-the fallback**, because the whole economics of the sandbox change with it: 10 containers on
-one host instead of 10 VMs, and a reset that takes seconds instead of a redeploy. Whether
-that is available is the one genuinely blocking unknown — see
-[open-questions.md](open-questions.md).
+Xill4 ships an official Linux image (`docker.cloudsmith.io/xillio/xill4/xill4`), so the
+container backend is the one being built: 5 containers on one host instead of 5 VMs, and a
+reset that takes seconds instead of a redeploy. Trainees work in the browser against port
+8000, so no desktop session is needed.
 
 Nothing in `scenarios/` or `grader/` depends on the answer.
 
@@ -62,6 +61,49 @@ Nothing in `scenarios/` or `grader/` depends on the answer.
 `.expected/` sitting outside every mount is the entire isolation mechanism for grading. The
 trainee's instance cannot read it; the grader, which runs in its own container on the host
 side, can. No secrets in the trainee's reach, no obfuscation needed.
+
+Two host-side permissions make that real rather than notional, and the provisioner sets
+both. `target/` is handed to the uid the image runs as — a container running as a non-root
+uid cannot write a directory the host created as root, and the failure is quiet in the worst
+way: the trainee builds a migration and nothing lands. `.expected/` is mode 0700, because on
+a trainer's host an answer key that anyone logged in can read is an answer key.
+
+## The half that is not on the filesystem
+
+The Xill4 image keeps projects and flows in MongoDB. A trainee's state is therefore in two
+places, and the second one is invisible to everything the file layout above describes:
+
+```
+  workspace directory                    database
+  ───────────────────                    ────────
+  source/ target/ .expected/             the projects and flows the trainee builds
+  on the host, per trainee               in the shared MongoDB, one database per trainee
+  reseeded from hash(trainee, scenario)  dropped by provision.sh --reset
+```
+
+One mongod serves the cohort, with a database and a scoped user per trainee. That is a
+fraction of the cost of a database server each, and it makes the sandbox's only durable
+state a single thing to back up (`platform.sh backup <trainee>`, which is `mongodump`).
+
+The isolation rests on two properties, and the second is easy to get wrong:
+
+1. **Each trainee's user is `dbOwner` on their own database only.** They can enumerate
+   nothing else and read nothing else, so the connection string sitting in their own
+   container's environment — which they can read — is worth exactly their own sandbox.
+2. **mongod runs with `--auth`.** Without it, MongoDB accepts a scoped user's credentials
+   and then ignores the scope: every trainee's connection string reads the whole cohort's
+   work. Creating per-trainee users without enabling authentication looks identical in the
+   provisioning output and is not isolation at all.
+
+Because property 2 fails silently and invisibly, it is asserted rather than documented:
+`workspace/preflight.py` writes a document into a neighbouring database and fails the run
+if a trainee's own credentials can read it back, and CI runs that check on every commit
+against a stand-in image.
+
+One property is deliberately *not* claimed: trainee containers share a network with the
+MongoDB, so one trainee's instance can reach another's on that network. Each instance is
+already published on a host port, so this adds no exposure that did not exist; if it ever
+matters, the fix is a per-trainee network with the database attached by the provisioner.
 
 ## Grading
 
@@ -129,7 +171,11 @@ real tenant where the friction of a real system *is* the lesson.
 provisioning. Seed → work → grade → report. Done: `make demo`.
 
 **Phase 1 — automate the workspace.** Provisioner behind the interface above, per-trainee
-isolation, reset, persistence across a multi-day course.
+isolation, reset, persistence across a multi-day course. The provisioning, isolation, reset
+and backup paths are built and tested; what remains is one run against the real image on a
+host that can reach the registry — `make preflight` — which answers the three questions
+Phase 1 exists to answer: does real Xill4 work grade cleanly, what does one container
+consume, and is the marking fair to a real person.
 
 **Phase 2 — control plane.** Entra ID login for partner trainees, scenario list with
 locked/available/passed state, "Check my work" button, trainer dashboard over the stored

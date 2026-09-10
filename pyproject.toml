@@ -21,8 +21,8 @@ grader = "grader.cli:main"
 where = ["grader"]
 
 [tool.pytest.ini_options]
-pythonpath = ["grader", "grader/tests"]
-testpaths = ["grader/tests"]
+pythonpath = ["grader", "grader/tests", "workspace"]
+testpaths = ["grader/tests", "workspace/tests"]
 addopts = "-q"
 
 [tool.ruff]
@@ -35,4 +35,5 @@ ignore = ["PLR2004"]  # magic values are fine in assertions and small comparison
 
 [tool.ruff.lint.per-file-ignores]
 "grader/tests/*" = ["PLR0913", "S101"]
+"workspace/tests/*" = ["PLR0913", "S101"]
 "grader/grader/checks/__init__.py" = ["E402"]  # plugin imports must follow the registry
