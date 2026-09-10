@@ -5,3 +5,7 @@ __pycache__/
 .venv/
 .workspaces/
 workspace/.env
+
+# Generated artifacts: proposals, decks, bundles, render previews.
+# Kept out of git deliberately -- see artifacts/README.md.
+artifacts/
