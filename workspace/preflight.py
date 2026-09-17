@@ -7,7 +7,9 @@ someone else, and to come back with everything the rest of Phase 1 needs to know
   * does the image pull, and how big is it
   * which user does it run as -- the answer to whether it can write the mounted target/
   * which URL answers, so the compose healthcheck stops being a guess
-  * does the trainee's scoped Mongo user actually hold the instance's state
+  * does the trainee's scoped Mongo user actually hold the instance's state, and what
+    shape is that state in -- the question that decides whether a check can grade an
+    extraction or a job run from the database rather than only from produced files
   * can one trainee's credentials reach another's database (this must fail)
   * what one container costs at idle
 
@@ -17,6 +19,12 @@ removes it again unless --keep is given.
   python workspace/preflight.py                     # the real image, from .env.platform
   python workspace/preflight.py --json report.json  # ... and a report to send on
   python workspace/preflight.py --image mongo:7.0   # prove the harness without the image
+
+After a trainee has actually done an exercise, the same script reports what their instance
+wrote to its database -- the interesting moment for grading, which a freshly booted
+instance cannot show:
+
+  python workspace/preflight.py --schema-only --trainee alice --json alice-schema.json
 
 Every check runs even when an earlier one fails, so one run reports every problem rather
 than the first. Exit status is non-zero if any check failed.
@@ -142,15 +150,20 @@ class Preflight:
         repository = self.settings.get("XILL4_IMAGE_REPO", "")
         version = self.settings.get("XILL4_VERSION", "")
         self.image = self.args.image or f"{repository}:{version}"
-        missing = [key for key in ("XILL4_LICENSE_KEY", "XILL4_ENVIRONMENT_SECRET",
-                                   "MONGO_ROOT_PASSWORD") if not self.settings.get(key)]
+        # A schema report starts no instance, so it needs the database credentials and
+        # nothing else. Demanding a licence key for it would fail a run that is fine.
+        required = (("MONGO_ROOT_PASSWORD",) if self.args.schema_only
+                    else ("XILL4_LICENSE_KEY", "XILL4_ENVIRONMENT_SECRET",
+                          "MONGO_ROOT_PASSWORD"))
+        missing = [key for key in required if not self.settings.get(key)]
         if missing and not self.args.image:
             self.record("config", FAIL,
                         f"{', '.join(missing)} not set in {self.platform_env.name}",
                         env_file=str(self.platform_env))
             return
-        self.record("config", PASS, f"image {self.image}",
-                    substitute_image=bool(self.args.image))
+        self.record("config", PASS,
+                    "database credentials present" if self.args.schema_only
+                    else f"image {self.image}", substitute_image=bool(self.args.image))
 
     def check_registry(self) -> None:
         """Log in to the private registry, if a token was supplied."""
@@ -425,6 +438,42 @@ class Preflight:
                         "the instance wrote nothing to its database -- was the connection "
                         "string accepted?", stderr=probe.stderr.strip()[-300:])
 
+    def inspect_mongo_schema(self) -> None:
+        """Report the shape of what the instance keeps in its database.
+
+        Field names and types only -- never values. The instance is handed a licence key
+        and an environment secret, and if it persists either of them, a dump of values
+        would put them in a report that gets passed around.
+
+        This is reconnaissance rather than a pass/fail: it answers whether a check can
+        assert on an extraction or a job run from the database, which matters for the
+        phases of a migration that produce no file to compare.
+        """
+        if self.status_of("mongo") != PASS:
+            self.record("mongo-schema", SKIP, "no MongoDB")
+            return
+        probe = self.mongosh(_SCHEMA_JS, {
+            "ROOT_USER": self.settings.get("MONGO_ROOT_USER", ""),
+            "ROOT_PASSWORD": self.settings.get("MONGO_ROOT_PASSWORD", ""),
+            "DB_NAME": sandbox.database_name(self.args.trainee),
+            "SAMPLE": str(self.args.schema_sample),
+        })
+        if probe.returncode != 0:
+            self.record("mongo-schema", FAIL, "could not read the database's shape",
+                        stderr=probe.stderr.strip()[-400:])
+            return
+        shape = json.loads(probe.stdout.strip().splitlines()[-1] or "[]")
+        if not shape:
+            self.record("mongo-schema", SKIP,
+                        "the database is empty -- re-run with --schema-only once a "
+                        "trainee has actually done an exercise")
+            return
+        paths = sum(len(entry["fields"]) for entry in shape)
+        self.record("mongo-schema", PASS,
+                    f"{len(shape)} collection(s), {paths} field path(s) "
+                    f"({sum(entry['documents'] for entry in shape)} document(s))",
+                    values_included=False, collections=shape)
+
     def measure_footprint(self) -> None:
         """What one trainee's container costs at idle -- the Phase 1 sizing question."""
         if self.status_of("instance-start") != PASS:
@@ -452,6 +501,19 @@ class Preflight:
         self.trainee_env.unlink(missing_ok=True)
 
     # ------------------------------------------------------------------ orchestration
+    def run_schema_only(self) -> int:
+        """Report one existing trainee's database shape, and change nothing else.
+
+        Meant for after the pilot: boot-time state says little, state written by a real
+        job is the thing worth looking at.
+        """
+        print(f"Xill4 sandbox schema report -- {self.args.trainee}\n")
+        self.check_docker()
+        self.load_settings()
+        self.start_platform()
+        self.inspect_mongo_schema()
+        return self.finish()
+
     def run_all(self) -> int:
         print(f"Xill4 sandbox preflight -- {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
         self.check_docker()
@@ -466,9 +528,12 @@ class Preflight:
         self.check_http()
         self.check_volumes()
         self.check_mongo_state()
+        self.inspect_mongo_schema()
         self.measure_footprint()
         self.teardown()
+        return self.finish()
 
+    def finish(self) -> int:
         failures = [result for result in self.results if result.status == FAIL]
         passed = [result for result in self.results if result.status == PASS]
         skipped = [result for result in self.results if result.status == SKIP]
@@ -535,6 +600,49 @@ try {
 """
 
 
+# Walks a sample of each collection and reports field PATHS and TYPES only. Values are
+# never read out: the instance holds a licence key and an environment secret, and a shape
+# report is meant to be pasted into a ticket.
+_SCHEMA_JS = """
+const env = process.env;
+if (!db.getSiblingDB("admin").auth(env.ROOT_USER, env.ROOT_PASSWORD)) {
+  throw new Error("root authentication failed");
+}
+const target = db.getSiblingDB(env.DB_NAME);
+const sample = parseInt(env.SAMPLE || "5", 10);
+const MAX_PATHS = 200;
+
+function kindOf(value) {
+  if (value === null) return "null";
+  if (Array.isArray(value)) return "array";
+  if (value instanceof Date) return "date";
+  if (value && value._bsontype) return value._bsontype;
+  return typeof value;
+}
+
+function walk(document, prefix, fields, depth) {
+  for (const key of Object.keys(document)) {
+    if (Object.keys(fields).length >= MAX_PATHS) return;
+    const path = prefix ? prefix + "." + key : key;
+    const value = document[key];
+    fields[path] = kindOf(value);
+    const nested = value && typeof value === "object" && !Array.isArray(value)
+                   && !(value instanceof Date) && !value._bsontype;
+    if (depth > 0 && nested) walk(value, path, fields, depth - 1);
+  }
+}
+
+const shape = [];
+for (const name of target.getCollectionNames()) {
+  const collection = target.getCollection(name);
+  const fields = {};
+  collection.find().limit(sample).forEach(d => walk(d, "", fields, 2));
+  shape.push({collection: name, documents: collection.countDocuments(), fields: fields});
+}
+print(JSON.stringify(shape));
+"""
+
+
 def _numeric_uid(user: str, image: str) -> int | None:
     """The uid the image runs as, resolving a user *name* by asking the image itself."""
     if user.isdigit():
@@ -571,10 +679,16 @@ def main(argv: list[str] | None = None) -> int:
                         help="seconds to wait for the instance to answer (default: 180)")
     parser.add_argument("--settle", type=int, default=30,
                         help="seconds to idle before measuring the footprint (default: 30)")
+    parser.add_argument("--schema-sample", type=int, default=5,
+                        help="documents sampled per collection for the shape report")
+    parser.add_argument("--schema-only", action="store_true",
+                        help="report an existing trainee's database shape and do nothing "
+                             "else -- run it after a trainee has done an exercise")
     parser.add_argument("--keep", action="store_true", help="leave the sandbox running")
     parser.add_argument("--json", type=Path, help="write the full report here")
     args = parser.parse_args(argv)
-    return Preflight(args).run_all()
+    preflight = Preflight(args)
+    return preflight.run_schema_only() if args.schema_only else preflight.run_all()
 
 
 if __name__ == "__main__":

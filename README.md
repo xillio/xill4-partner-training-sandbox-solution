@@ -123,6 +123,16 @@ credentials really hold its state, and what one container costs. It provisions a
 trainee and removes it again. Everything it finds is in the report; the two values it asks
 you to copy into `.env.platform` are printed at the end.
 
+It also reports the *shape* of what an instance keeps in its database — field names and
+types, never values, because the instance is handed a licence key and an environment
+secret. That is what decides whether a check can grade a job run or an extraction from the
+database rather than only from produced files. A freshly booted instance has little to
+show, so run it again once a trainee has actually done an exercise:
+
+```
+python workspace/preflight.py --schema-only --trainee alice --json alice-schema.json
+```
+
 `make measure SECONDS=300` samples the running cohort and extrapolates — run it while
 trainees are working, because an idle container is the floor, not the cost.
 
